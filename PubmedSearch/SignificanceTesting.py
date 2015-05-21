@@ -1,5 +1,8 @@
+from PubmedSearch.HclustHeatMap import HiearchicalHeatmap
+from matplotlib import pyplot
 __author__ = 'peeyush'
 import pandas as pd
+import scipy.stats as stats
 
 
 class SignificanceObject():
@@ -10,6 +13,9 @@ class SignificanceObject():
         self.occurrencedf = occurrencedf
         self.heatmapdf = heatmapdf
         self.significancedf = significancedf
+        self.filheatmapdf = None
+        self.pvaldf = None
+        self.adjpvaldf = None
 
     def heatmap_create(self):
         occurrencedf = self.occurrencedf
@@ -18,59 +24,51 @@ class SignificanceObject():
         scaled_df.columns = occurrencedf.index
         scaled_df = scaled_df.set_index(occurrencedf.columns)
         self.heatmapdf = scaled_df
+        self.filter_heatmapdf()
 
-    def plot_heatmap(df):
-        df = df #self.heatmapdf
-        import matplotlib.pyplot as plt
-        from matplotlib.colors import LinearSegmentedColormap
-        # Plot it out
-        fig, ax = plt.subplots()
-        custom_map = LinearSegmentedColormap.from_list(name='custom_div_cmap', colors =['blue', 'white', 'red'], N=299)
-        heatmap = ax.pcolor(df, cmap=custom_map, alpha=0.5)
-        # Format
-        fig = plt.gcf()
-        fig.set_size_inches(15, 11)
-        # turn off the frame
-        ax.set_frame_on(False)
+    def filter_heatmapdf(self):
+        '''
+        Filter rows and columns with sum < 1
+        '''
+        df = self.heatmapdf
+        self.filheatmapdf = df.loc[df.sum(1) > 1, df.sum(0) > 1]
 
-        # put the major ticks at the middle of each cell
-        #ax.set_yticks(np.arange(df.shape[0]) + 0.5, minor=False)
-        #ax.set_xticks(np.arange(df.shape[1]) + 0.5, minor=False)
+    def plot_heatmap(self):
+        graph = TestHeatmap()
+        graph.plotmap(self.filheatmapdf)
+        return graph
 
-        # want a more natural, table-like display
-        ax.invert_yaxis()
-        ax.xaxis.tick_top()
+    def fisher_test(self):
+        occu_df = self.occurrencedf
+        pvaldf = pd.DataFrame(occu_df)
+        adjpvaldf = pd.DataFrame(occu_df)
+        matsum = occu_df.sum().sum()
+        for k, v in occu_df.iterrows():
+            key = v.keys()
+            #print v.shape
+            rowsum = v.sum()
+            for i in range(0, v.shape[0]):
+                value = v[i]
+                colsum = occu_df[[i]].sum()[0] - value
+                rsum = rowsum - value
+                oddsratio, pval = stats.fisher_exact([[value, rsum], [colsum, matsum-(value+rsum+colsum)]])
+                pvaldf.loc[k, key[i]] = pval
+                if pval < 0.05/v.shape[0]:
+                    adjpvaldf.loc[k, key[i]] = pval*v.shape[0]
+                else:
+                    adjpvaldf.loc[k, key[i]] = 1
+        self.pvaldf = pvaldf
+        self.adjpvaldf = adjpvaldf
 
-        # note I could have used nba_sort.columns but made "labels" instead
-        ax.set_xticklabels(df.columns, minor=False)
-        ax.set_yticklabels(df.index, minor=False)
-        # rotate the
-        plt.xticks(rotation=90)
+class TestHeatmap(HiearchicalHeatmap): ## This should create a object of HiearchicalHeatmap
+    short_name = 'GCAM_HeatMap'
 
-        ax.grid(False)
-
-        # Turn off all the ticks
-        ax = plt.gca()
-        plt.savefig('/home/peeyush/Desktop/new_heatmap_p6.png')
-
-def hclustering(df):
-    '''
-    
-    :param df:
-    :return:
-    '''
-    import fastcluster
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from scipy.cluster.hierarchy import dendrogram
-    from scipy.spatial.distance import pdist
-    import scipy.cluster.hierarchy as hierarchy
-    Z = fastcluster.linkage(X, method ='single')
-    leaves = hierarchy.leaves_list(Z)
-    count = 0
-    for k, v in df.iterrows():
-        df.loc[k, 'cluster'] = leaves[count]
-        count += 1
+    def plotmap(self, df):
+        self.frame = df
+        self.path = '/home/peeyush/Desktop/' + self. short_name + '.pdf'
+        fig, axm, axcb, cb = HiearchicalHeatmap.plot(self)
+        cb.set_label("Random value")
+        pyplot.savefig(self.path)
 
 
 def scale(val, src, dst):

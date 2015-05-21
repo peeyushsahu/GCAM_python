@@ -44,7 +44,10 @@ del annDB, cellDB, cellSyn
 significanceDF = SignificanceTesting.SignificanceObject(cellOccu)
 significanceDF.heatmap_create()
 significanceDF.heatmapdf.to_csv('/home/peeyush/Desktop/GCAM_python_final.csv', sep=',', encoding='utf-8', ignore_index=True)
-#significanceDF.plot_heatmap()
+significanceDF.fisher_test()
+significanceDF.pvaldf.to_csv('/home/peeyush/Desktop/GCAM_python_final_pval.csv', sep=',', encoding='utf-8', ignore_index=True)
+significanceDF.adjpvaldf.to_csv('/home/peeyush/Desktop/GCAM_python_final_adjpval.csv', sep=',', encoding='utf-8', ignore_index=True)
+significanceDF.plot_heatmap()
 stop = timeit.default_timer()
 print 'Total no. of genes: ', len(genenames)
 print 'Time elapsed:', stop-start, ' sec'
