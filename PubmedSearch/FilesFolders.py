@@ -1,5 +1,23 @@
 __author__ = 'peeyush'
 from pandas import read_csv
+import os
+
+def create_folders(path):
+    '''
+    folders = ["overlap",
+               "differential",
+               "filtered",
+               "plots",
+               "seq4motif",
+               "valley_peaks",
+               "CpG",
+               "density_based_motif"]
+    for folder in folders:
+    '''
+    print 'Results directory created: ' + path +'/GCAM_output'
+    npath = path +'/GCAM_output'
+    if not os.path.exists(npath):
+        os.makedirs(npath)
 
 def read_database(path):
     '''
@@ -43,7 +61,10 @@ def get_genes(path):
         for gene in file:
             gene = gene.strip()
             geneList.append(gene.lower())
-    return geneList
+    f_geneList = list(set(geneList))
+    print 'Size of user provided gene list:', len(geneList)
+    print 'No. of genes after remove duplicates:', len(f_geneList)
+    return f_geneList
 
 def gene_synonym(path, organism):
     '''
@@ -58,3 +79,14 @@ def gene_synonym(path, organism):
         geneSyn = read_csv(path + '/Mouse_synonym.txt', header=None, sep='\t')
     geneSyn.columns = ['gene', 'synonym']
     return geneSyn
+
+def read_expression_file(path):
+    '''
+    Reads expression data for analysis
+    :param path:
+    :return:
+    '''
+    expressiondf = read_csv(path, header=0, sep=",")
+    expressiondf['genes'] = expressiondf['genes'].str.lower()
+    expressiondf = expressiondf.set_index(['genes'])
+    return expressiondf

@@ -21,7 +21,7 @@ The documentation about the custom color gradients can be found here:
 
 # Third party modules #
 import numpy, scipy, matplotlib, pandas
-from matplotlib import pyplot
+import matplotlib.pyplot as pyplot
 import scipy.cluster.hierarchy as sch
 import scipy.spatial.distance as dist
 
@@ -204,12 +204,13 @@ class HiearchicalHeatmap(object):
         axcb.xaxis.set_major_locator(pyplot.MaxNLocator(max_cb_ticks))
 
         # Render the graphic #
-        if len(row_header)>50 or len(column_header)>50: pyplot.rcParams['font.size'] = 6
-        else: pyplot.rcParams['font.size'] = 7
-
+        if len(row_header) > 50 or len(column_header) > 50: pyplot.rcParams['font.size'] = 1
+        else: pyplot.rcParams['font.size'] = 3
+        pyplot.close()
         # Return figure #
         return fig, axm, axcb, cb
 
+'''
 ###############################################################################
 class TestHeatmap(HiearchicalHeatmap):
     short_name = 'test_heatmap'
@@ -226,3 +227,4 @@ def test():
     graph = TestHeatmap()
     graph.plot()
     return graph
+'''

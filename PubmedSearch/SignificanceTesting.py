@@ -1,5 +1,4 @@
 from PubmedSearch.HclustHeatMap import HiearchicalHeatmap
-from matplotlib import pyplot
 __author__ = 'peeyush'
 import pandas as pd
 import scipy.stats as stats
@@ -7,17 +6,21 @@ import scipy.stats as stats
 
 class SignificanceObject():
     '''
-    This Object will hold three dataframes
+    This Object will hold dataframes used and created in analysis
     '''
-    def __init__(self, occurrencedf, heatmapdf=None, significancedf=None):
+    def __init__(self, occurrencedf, heatmapdf=None):
         self.occurrencedf = occurrencedf
         self.heatmapdf = heatmapdf
-        self.significancedf = significancedf
         self.filheatmapdf = None
         self.pvaldf = None
         self.adjpvaldf = None
+        self.cellgenedf = None
+        self.sigCelltypedf = None
 
-    def heatmap_create(self):
+    def heatmapdf_create(self):
+        '''
+        This function will generate df for HeatMap by scaling the occurrencedf
+        '''
         occurrencedf = self.occurrencedf
         transposedf = pd.DataFrame.transpose(occurrencedf)
         scaled_df = scale_dataframe(transposedf)
@@ -28,17 +31,24 @@ class SignificanceObject():
 
     def filter_heatmapdf(self):
         '''
-        Filter rows and columns with sum < 1
+        This method filters rows and columns with sum < 1 in HeatMapdf
         '''
         df = self.heatmapdf
         self.filheatmapdf = df.loc[df.sum(1) > 1, df.sum(0) > 1]
 
-    def plot_heatmap(self):
+    def plot_heatmap(self, path):
+        '''
+        This method will plot the HeatMap dataframe. Using package HclustHeatMap.
+        '''
         graph = TestHeatmap()
-        graph.plotmap(self.filheatmapdf)
+        graph.plotmap(self.filheatmapdf, path)
         return graph
 
     def fisher_test(self):
+        '''
+        This method will calculate significance of celltype using their occurrence.
+        Statistical test used is Fisher Exact Test
+        '''
         occu_df = self.occurrencedf
         pvaldf = pd.DataFrame(occu_df)
         adjpvaldf = pd.DataFrame(occu_df)
@@ -59,17 +69,60 @@ class SignificanceObject():
                     adjpvaldf.loc[k, key[i]] = 1
         self.pvaldf = pvaldf
         self.adjpvaldf = adjpvaldf
+        self.celltype_overrepresntation_list()  #### def()
+
+    def celltype_overrepresntation_list(self):
+        '''
+        This method will save the result of significance in one DF.
+        '''
+        significance = 1
+        column = ['CellType', 'Genes', 'P-val', 'FDR']
+        cellgenedf = pd.DataFrame()
+        for celltype, v in self.pvaldf.iterrows():
+            for gene, pval in v.iteritems():
+                if pval < significance:
+                    cellgenedf = cellgenedf.append(pd.Series([celltype, gene, pval, self.adjpvaldf.loc[celltype, gene]])
+                                                   , ignore_index=True)
+        cellgenedf.columns = column
+        self.cellgenedf = cellgenedf
+        self.significant_celltypes()    #### def()
+
+    def significant_celltypes(self):
+        '''
+        This method will test the combined significance of celltype in the data and help predicts
+        its association with user given data.
+        '''
+        sigcelltype = pd.DataFrame()
+        #print self.cellgenedf
+        cellgroup = self.cellgenedf.groupby(self.cellgenedf['CellType'])
+        cellgenedf = self.cellgenedf
+        c = len(cellgenedf[cellgenedf['FDR'] < 0.001])
+        d = len(cellgenedf)
+        for celltype, val in cellgroup:
+            #print 'celltype:'+celltype
+            a = len(val[val['FDR'] < 0.001])
+            b = len(val) - a
+            cc = c - a
+            dd = d - (a+b+c)
+            #print a, ':', b, ':', cc, ':', dd
+            oddsRatio, pval = stats.fisher_exact([[a, b], [cc, dd]])
+            #print pval
+            sigcelltype = sigcelltype.append(pd.Series([celltype, pval, oddsRatio]), ignore_index=True)
+        sigcelltype.columns = ['CellType', 'P-val', 'OddsRatio']
+        self.sigCelltypedf = sigcelltype
+
 
 class TestHeatmap(HiearchicalHeatmap): ## This should create a object of HiearchicalHeatmap
     short_name = 'GCAM_HeatMap'
 
-    def plotmap(self, df):
+    def plotmap(self, df, path):
+        import matplotlib.pyplot as plt
         self.frame = df
-        self.path = '/home/peeyush/Desktop/' + self. short_name + '.pdf'
+        self.path = path + self. short_name + '.pdf'
         fig, axm, axcb, cb = HiearchicalHeatmap.plot(self)
-        cb.set_label("Random value")
-        pyplot.savefig(self.path)
-
+        cb.set_label("Enrichment scale")
+        plt.savefig(self.path)
+        plt.close()
 
 def scale(val, src, dst):
     '''
