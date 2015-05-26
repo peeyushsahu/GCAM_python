@@ -52,17 +52,19 @@ color_gradients = {'red_black_sky'      : make_cmap(red_black_sky),
                    'coolwarm'           : pyplot.cm.coolwarm,}
 
 ###############################################################################
-class HiearchicalHeatmap(object):
+class HiearchicalHeatmap():
     """A common use case for biologists analyzing their gene expression data is to cluster and visualize patterns of expression in the form of a heatmap and associated dendrogram."""
-
-    row_method = 'single'     # Can be: linkage, single, complete, average, weighted, centroid, median, ward
-    column_method = 'single'     # Can be: linkage, single, complete, average, weighted, centroid, median, ward
-    row_metric = 'braycurtis' # Can be: see scipy documentation
-    column_metric = 'braycurtis' # Can be: see scipy documentation
-    gradient_span = 'only_max'   # Can be: min_to_max, min_to_max_centered, only_max, only_min
-    color_gradient = 'red_white_blue'   # Can be: see color_gradients dictionary
-    fig_weight = 12
-    fig_height = 8.5
+    def __init__(self):
+        self.row_method = 'single'     # Can be: linkage, single, complete, average, weighted, centroid, median, ward
+        self.column_method = 'single'     # Can be: linkage, single, complete, average, weighted, centroid, median, ward
+        self.row_metric = 'braycurtis' # Can be: see scipy documentation
+        self.column_metric = 'braycurtis' # Can be: see scipy documentation
+        self.gradient_span = 'only_max'   # Can be: min_to_max, min_to_max_centered, only_max, only_min
+        self.color_gradient = 'red_white_blue'   # Can be: see color_gradients dictionary
+        self.fig_weight = 12
+        self.fig_height = 8.5
+        self.frame = None
+        self.path = None
 
     def plot(self):
         # Names #
@@ -206,6 +208,8 @@ class HiearchicalHeatmap(object):
         # Render the graphic #
         if len(row_header) > 50 or len(column_header) > 50: pyplot.rcParams['font.size'] = 1
         else: pyplot.rcParams['font.size'] = 3
+        cb.set_label("Significance scale")
+        pyplot.savefig(self.path)
         pyplot.close()
         # Return figure #
         return fig, axm, axcb, cb
@@ -215,16 +219,16 @@ class HiearchicalHeatmap(object):
 class TestHeatmap(HiearchicalHeatmap):
     short_name = 'test_heatmap'
 
-    def plot(self):
+    def plot(self, df_new):
         self.frame = df_new
         self.path = '/home/peeyush/Desktop/' + self. short_name + '.pdf'
         fig, axm, axcb, cb = HiearchicalHeatmap.plot(self)
-        cb.set_label("Random value")
+
         pyplot.savefig(self.path)
 
 ###############################################################################
 def test():
     graph = TestHeatmap()
-    graph.plot()
+    graph.plot(df_new)
     return graph
 '''

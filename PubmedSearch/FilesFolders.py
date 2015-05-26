@@ -88,5 +88,5 @@ def read_expression_file(path):
     '''
     expressiondf = read_csv(path, header=0, sep=",")
     expressiondf['genes'] = expressiondf['genes'].str.lower()
-    expressiondf = expressiondf.set_index(['genes'])
+    expressiondf = expressiondf.set_index(expressiondf['genes'])
     return expressiondf

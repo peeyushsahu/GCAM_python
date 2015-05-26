@@ -13,8 +13,8 @@ __author__ = 'peeyush'
 start = timeit.default_timer()
 save_location = '/home/peeyush/Desktop'
 FilesFolders.create_folders(save_location)
-genenames = ['aatf', 'prmt6', 'ski', 'cd44']
-#genenames = FilesFolders.get_genes('/home/peeyush/Desktop/genes.txt')
+#genenames = ['aatf', 'prmt6', 'ski', 'cd44']
+genenames = FilesFolders.get_genes('/home/peeyush/Desktop/genes.txt')
 primarygene = genenames
 subquery = None
 synonym = False
@@ -55,11 +55,13 @@ significanceDF.adjpvaldf.to_csv(save_location+'/GCAM_output/GCAM_python_final_ad
 significanceDF.cellgenedf.to_csv(save_location+'/GCAM_output/GCAM_python_final_cellGene.csv', sep=',', encoding='utf-8', ignore_index=True)
 significanceDF.sigCelltypedf.to_csv(save_location+'/GCAM_output/GCAM_python_final_SigCelltypes.csv', sep=',', encoding='utf-8', ignore_index=True)
 significanceDF.plot_heatmap(save_location)
-stop = timeit.default_timer()
+
 
 ###### Expression analysis of celltype
 expObj = ExpressionAnalysis.ExpressionData(expressiondf)
 expObj.celltype_expression(significanceDF.sigCelltypedf, significanceDF.cellgenedf, save_location)
 expObj.plotdf.to_csv(save_location+'/GCAM_output/GCAM_python_final_celltype_vs_expression.csv', sep=',', encoding='utf-8', ignore_index=True)
+
+stop = timeit.default_timer()
 print 'Total no. of genes: ', len(genenames)
 print 'Time elapsed:', stop-start, ' sec'

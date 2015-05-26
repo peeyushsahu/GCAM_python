@@ -20,7 +20,8 @@ class ExpressionData():
                 #print df.shape
                 for key, val in df.iterrows():
                     expression = self.expressiondf.loc[val['Genes'], 'FoldChange']
-                    expression_list.append(expression)
+                    if type(expression) == pd.Series: expression_list.append(max(expression))
+                    else: expression_list.append(expression)
                 plotdf = plotdf.append(pd.Series([v['CellType'], v['P-val'], sum(expression_list)/len(expression_list)]), ignore_index=True)
                 #print [v['CellType'], v['P-val'], sum(expression_list)/len(expression_list)]
         #print plotdf
@@ -56,13 +57,14 @@ class ExpressionData():
         for i in range(0,len(t)):
             if t[i] < 0.05:
                 plt.annotate(name[i], xy=(t[i], s[i]),  xycoords='data',
-                            xytext=(30, 30), textcoords='offset points',
+                            xytext=(30, 30+i), textcoords='offset points',
                             arrowprops=dict(arrowstyle="->",
-                                            connectionstyle="arc3,rad=0"))
+                                            connectionstyle="arc3,rad=0"), fontsize=10)
+        plt.tick_params(axis='both', labelsize=8)
         plt.xlim(min(t)-0.01, max(t)+0.01)
-        plt.title('Expression vs Significance')
-        plt.xlabel('P-Value')
-        plt.ylabel('Average Fold Change')
+        plt.title('Expression vs Significance', fontsize=14)
+        plt.xlabel('P-Value', fontsize=12)
+        plt.ylabel('Average Fold Change', fontsize=12)
         #plt.show()
         plt.savefig(path+'/GCAM_output/GCAM_celltype_VS_expresiion.png')
         plt.close()

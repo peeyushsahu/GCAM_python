@@ -39,10 +39,16 @@ class SignificanceObject():
     def plot_heatmap(self, path):
         '''
         This method will plot the HeatMap dataframe. Using package HclustHeatMap.
+        :param HiearchicalHeatmap:
+        :param df:
+        :param path:
+        :return:
         '''
-        graph = TestHeatmap()
-        graph.plotmap(self.filheatmapdf, path)
-        return graph
+        hclustHeatmap = HiearchicalHeatmap()
+        hclustHeatmap.frame = self.filheatmapdf
+        hclustHeatmap.path = path + '/GCAM_output/GCAM_heatMap.pdf'
+        fig, axm, axcb, cb = hclustHeatmap.plot()
+
 
     def fisher_test(self):
         '''
@@ -111,18 +117,6 @@ class SignificanceObject():
         sigcelltype.columns = ['CellType', 'P-val', 'OddsRatio']
         self.sigCelltypedf = sigcelltype
 
-
-class TestHeatmap(HiearchicalHeatmap): ## This should create a object of HiearchicalHeatmap
-    short_name = 'GCAM_HeatMap'
-
-    def plotmap(self, df, path):
-        import matplotlib.pyplot as plt
-        self.frame = df
-        self.path = path + self. short_name + '.pdf'
-        fig, axm, axcb, cb = HiearchicalHeatmap.plot(self)
-        cb.set_label("Enrichment scale")
-        plt.savefig(self.path)
-        plt.close()
 
 def scale(val, src, dst):
     '''
