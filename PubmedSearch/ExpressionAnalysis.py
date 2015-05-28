@@ -35,7 +35,7 @@ class ExpressionData():
         import matplotlib.pyplot as plt
         print 'plotting significance plot'
         plotdf = self.plotdf
-        print plotdf
+        #print plotdf
 
         t = plotdf['p-val'].tolist()
         s = plotdf['expression'].tolist()
@@ -45,7 +45,7 @@ class ExpressionData():
 
         plt.plot(t, s, 'o', markersize=5, markerfacecolor='black')
         # draw a thick red hline at y=0 that spans the xrange
-        l = plt.axhline(linewidth=1, color='black')
+        l = plt.axhline(linewidth=1, color='white')
 
         # draw a default vline at x=1 that spans the yrange
         l = plt.axvline(linewidth=1, color='black', x=0.05)

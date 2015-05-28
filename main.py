@@ -13,8 +13,8 @@ __author__ = 'peeyush'
 start = timeit.default_timer()
 save_location = '/home/peeyush/Desktop'
 FilesFolders.create_folders(save_location)
-#genenames = ['aatf', 'prmt6', 'ski', 'cd44']
-genenames = FilesFolders.get_genes('/home/peeyush/Desktop/genes.txt')
+genenames = ['aatf', 'prmt6', 'ski', 'cd44']
+#genenames = FilesFolders.get_genes('/home/peeyush/Desktop/genes.txt')
 primarygene = genenames
 subquery = None
 synonym = False

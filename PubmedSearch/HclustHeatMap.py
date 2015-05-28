@@ -20,7 +20,7 @@ The documentation about the custom color gradients can be found here:
 """
 
 # Third party modules #
-import numpy, scipy, matplotlib, pandas
+import numpy, matplotlib
 import matplotlib.pyplot as pyplot
 import scipy.cluster.hierarchy as sch
 import scipy.spatial.distance as dist
@@ -206,29 +206,14 @@ class HiearchicalHeatmap():
         axcb.xaxis.set_major_locator(pyplot.MaxNLocator(max_cb_ticks))
 
         # Render the graphic #
-        if len(row_header) > 50 or len(column_header) > 50: pyplot.rcParams['font.size'] = 1
-        else: pyplot.rcParams['font.size'] = 3
-        cb.set_label("Significance scale")
+        print len(row_header), len(column_header)
+        if len(row_header) > 50 or len(column_header) > 50:
+            pyplot.rcParams['font.size'] = 8
+        else:
+            pyplot.rcParams['font.size'] = 8
+        print(pyplot.rcParams.find_all('\.size'))
+        cb.set_label("Significance scale", fontsize=8)
         pyplot.savefig(self.path)
         pyplot.close()
         # Return figure #
         return fig, axm, axcb, cb
-
-'''
-###############################################################################
-class TestHeatmap(HiearchicalHeatmap):
-    short_name = 'test_heatmap'
-
-    def plot(self, df_new):
-        self.frame = df_new
-        self.path = '/home/peeyush/Desktop/' + self. short_name + '.pdf'
-        fig, axm, axcb, cb = HiearchicalHeatmap.plot(self)
-
-        pyplot.savefig(self.path)
-
-###############################################################################
-def test():
-    graph = TestHeatmap()
-    graph.plot(df_new)
-    return graph
-'''
