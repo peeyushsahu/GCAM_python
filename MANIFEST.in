@@ -1,0 +1,3 @@
+include README setup.py bin/GCAM
+recursive-include GCAM *.py *.pyx *.pxd *.txt *.csv
+prune test
