@@ -50,7 +50,7 @@ class SignificanceObject():
         fig, axm, axcb, cb = hclustHeatmap.plot()
 
 
-    def fisher_test(self):
+    def fisher_occurrence_test(self):
         '''
         This method will calculate significance of celltype using their occurrence.
         Statistical test used is Fisher Exact Test
@@ -91,9 +91,9 @@ class SignificanceObject():
                                                    , ignore_index=True)
         cellgenedf.columns = column
         self.cellgenedf = cellgenedf
-        self.significant_celltypes()    #### def()
+        self.fisher_significant_celltypes()    #### def()
 
-    def significant_celltypes(self):
+    def fisher_significant_celltypes(self):
         '''
         This method will test the combined significance of celltype in the data and help predicts
         its association with user given data.
@@ -102,11 +102,11 @@ class SignificanceObject():
         #print self.cellgenedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['CellType'])
         cellgenedf = self.cellgenedf
-        c = len(cellgenedf[cellgenedf['FDR'] < 0.001])
+        c = len(cellgenedf[cellgenedf['FDR'] < 0.05])
         d = len(cellgenedf)
         for celltype, val in cellgroup:
             #print 'celltype:'+celltype
-            a = len(val[val['FDR'] < 0.001])
+            a = len(val[val['FDR'] < 0.05])
             b = len(val) - a
             cc = c - a
             dd = d - (a+b+c)

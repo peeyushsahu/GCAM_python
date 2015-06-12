@@ -21,14 +21,15 @@ class Genes():
             data = Entrez.esearch(db="pubmed", retmax=15000, term=query)
             res = Entrez.read(data)
             PMID = res["IdList"]
-            print 'Pubmed ids for '+query+':', len(PMID)
+            #print 'Pubmed ids for '+query+':', len(PMID)
             self.pmids = PMID
         else:
             data = Entrez.esearch(db="pubmed", retmax=15000, term=gene)
             res = Entrez.read(data)
             PMID = res["IdList"]
-            print 'Pubmed ids for '+gene+':', len(PMID)
+            #print 'Pubmed ids for '+gene+':', len(PMID)
             self.pmids = PMID
+
 
     def get_pmid_pos(self, annoDB):
         celltype_list = []

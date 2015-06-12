@@ -208,10 +208,10 @@ class HiearchicalHeatmap():
         # Render the graphic #
         print len(row_header), len(column_header)
         if len(row_header) > 50 or len(column_header) > 50:
-            pyplot.rcParams['font.size'] = 8
+            pyplot.rcParams['font.size'] = 4
         else:
             pyplot.rcParams['font.size'] = 8
-        print(pyplot.rcParams.find_all('\.size'))
+        #print(pyplot.rcParams.find_all('\.size'))
         cb.set_label("Significance scale", fontsize=8)
         pyplot.savefig(self.path)
         pyplot.close()
