@@ -206,14 +206,13 @@ class HiearchicalHeatmap():
         axcb.xaxis.set_major_locator(pyplot.MaxNLocator(max_cb_ticks))
 
         # Render the graphic #
-        print len(row_header), len(column_header)
-        if len(row_header) > 50 or len(column_header) > 50:
+        if len(row_header) > 80 or len(column_header) > 80:
             pyplot.rcParams['font.size'] = 4
         else:
             pyplot.rcParams['font.size'] = 8
         #print(pyplot.rcParams.find_all('\.size'))
         cb.set_label("Significance scale", fontsize=8)
         pyplot.savefig(self.path)
-        pyplot.close()
+        pyplot.clf()
         # Return figure #
         return fig, axm, axcb, cb

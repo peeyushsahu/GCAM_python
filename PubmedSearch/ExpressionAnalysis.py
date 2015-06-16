@@ -1,5 +1,4 @@
 __author__ = 'peeyush'
-import numpy as np
 import pandas as pd
 
 
@@ -67,4 +66,4 @@ class ExpressionData():
         plt.ylabel('Average Fold Change', fontsize=12)
         #plt.show()
         plt.savefig(path+'/GCAM_output/GCAM_celltype_VS_expresiion.png')
-        plt.close()
+        plt.clf()

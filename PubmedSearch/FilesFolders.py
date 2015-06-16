@@ -1,6 +1,6 @@
 __author__ = 'peeyush'
 from pandas import read_csv
-import os
+import os, sys
 
 def create_folders(path):
     '''
@@ -14,7 +14,7 @@ def create_folders(path):
                "density_based_motif"]
     for folder in folders:
     '''
-    print 'Results directory created: ' + path +'/GCAM_output'
+    print 'Output directory created: ' + path +'/GCAM_output'
     npath = path +'/GCAM_output'
     if not os.path.exists(npath):
         os.makedirs(npath)
@@ -57,14 +57,18 @@ def get_genes(path):
     :return:
     '''
     geneList = []
-    with open(path) as file:
-        for gene in file:
-            gene = gene.strip()
-            geneList.append(gene.lower())
-    f_geneList = list(set(geneList))
+    try:
+        with open(path) as file:
+            for gene in file:
+                gene = gene.strip()
+                geneList.append(gene.lower())
+    except IOError:
+        print "Error: File does not appear to exist."
+        sys.exit(1)
+    f_genelist = list(set(geneList))
     print 'Size of user provided gene list:', len(geneList)
-    print 'No. of genes after remove duplicates:', len(f_geneList)
-    return f_geneList
+    print 'No. of genes after remove duplicates:', len(f_genelist)
+    return f_genelist
 
 def gene_synonym(path, organism):
     '''
@@ -78,6 +82,8 @@ def gene_synonym(path, organism):
     elif organism == 'mouse':
         geneSyn = read_csv(path + '/Mouse_synonym.txt', header=None, sep='\t')
     geneSyn.columns = ['gene', 'synonym']
+    geneSyn['gene'] = geneSyn['gene'].str.lower()
+    geneSyn = geneSyn.set_index(geneSyn['gene'])
     return geneSyn
 
 def read_expression_file(path):

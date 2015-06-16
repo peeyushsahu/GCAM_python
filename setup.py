@@ -48,9 +48,15 @@ def main():
               'Topic :: Scientific/Engineering :: Bio-Informatics',
               'Programming Language :: Python',
           ],
-
+          install_requires=[
+              'numpy>=1.6',
+              'matplotlib',
+              'pandas',
+              #'biopython',
+          ],
           )
 
 if __name__ == '__main__':
+    print "GCAM is running....."
     main()
 
