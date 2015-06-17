@@ -1,4 +1,4 @@
-from PubmedSearch.HclustHeatMap import HiearchicalHeatmap
+from GCAM.HclustHeatMap import HiearchicalHeatmap
 __author__ = 'peeyush'
 import pandas as pd
 import scipy.stats as stats

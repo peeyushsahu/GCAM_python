@@ -16,7 +16,7 @@ the distribution).
 @contact: peeyush.sahu@imt.uni-marburg.de
 """
 
-import os
+
 import sys
 from setuptools import setup, Extension
 
@@ -32,9 +32,9 @@ def main():
           author='Peeyush Sahu',
           author_email='peeyush.sahu@imt.uni-marburg.de',
           url='https://github.com/peeyushsahu/GCAM_python.git',
-          package_dir={'GCAM' : 'PubmedSearch'},
-          packages=['PubmedSearch'],
-          package_data={'PubmedSearch': ['resources/*']},
+          packages=['GCAM'],
+          package_dir={'GCAM' : 'GCAM'},
+          package_data={'GCAM': ['resources/*']},
           scripts=['bin/GCAM'],
 
           classifiers=[
@@ -57,6 +57,5 @@ def main():
           )
 
 if __name__ == '__main__':
-    print "GCAM is running....."
     main()
 
