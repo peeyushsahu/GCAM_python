@@ -67,7 +67,7 @@ def get_genes(path):
         sys.exit(1)
     f_genelist = list(set(geneList))
     print 'Size of user provided gene list:', len(geneList)
-    print 'No. of genes after remove duplicates:', len(f_genelist)
+    print 'No. of genes after removing duplicates:', len(f_genelist)
     return f_genelist
 
 def gene_synonym(path, organism):
@@ -92,7 +92,15 @@ def read_expression_file(path):
     :param path:
     :return:
     '''
-    expressiondf = read_csv(path, header=0, sep=",")
-    expressiondf['genes'] = expressiondf['genes'].str.lower()
-    expressiondf = expressiondf.set_index(expressiondf['genes'])
+    try:
+        expressiondf = read_csv(path, header=0, sep=",")
+        if 'genes' in expressiondf.columns and 'FoldChange' in expressiondf.columns:
+            expressiondf['genes'] = expressiondf['genes'].str.lower()
+            expressiondf = expressiondf.set_index(expressiondf['genes'])
+        else:
+            print 'please name columns as genes and FoldChange'
+            sys.exit(0)
+    except IOError:
+        print "Error: Expression File does not appear to exist."
+        sys.exit(0)
     return expressiondf

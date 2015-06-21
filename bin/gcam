@@ -28,13 +28,14 @@ def main():
     '''
     argparser = arg_parser()
     args = argparser.parse_args()
-    import pkg_resources
-    foo_config = pkg_resources.resource_exists('GCAM', 'resources/cellTypes.csv')
-    print type(foo_config)
-    print 'pkg_resource:',foo_config
-    print pkg_resources.cleanup_resources(force=False)
+    import pkg_resources, site
+    print 'Checking availability of resource: ', pkg_resources.resource_exists('GCAM', 'resources')
+    pkg_resources.set_extraction_path(site.getsitepackages()[0])
+    cache_filename = pkg_resources.resource_filename('GCAM', 'resources')
+    #print cache_filename
     ### Calling GCAM analysis function with command line arguments
-    analysis.gcam_analysis(args)
+    analysis.gcam_analysis(args, cache_filename)
+    print 'Number os temp resource left: ', pkg_resources.cleanup_resources(force=False)
 
 
 

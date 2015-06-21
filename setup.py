@@ -23,8 +23,9 @@ from setuptools import setup, Extension
 
 def main():
     if float(sys.version[:3])<2.7 or float(sys.version[:3])>=2.8:
-        sys.stderr.write("CRITICAL: Python version must be 2.7!\n")
-        sys.exit(1)
+        print "Python version is not 2.7.x"
+        #sys.stderr.write("CRITICAL: Python version must be 2.7!\n")
+        #sys.exit(1)
 
     setup(name="GCAM",
           version="1.0.0",
@@ -35,7 +36,7 @@ def main():
           packages=['GCAM'],
           package_dir={'GCAM' : 'GCAM'},
           package_data={'GCAM': ['resources/*']},
-          scripts=['bin/GCAM'],
+          scripts=['bin/gcam'],
 
           classifiers=[
               'Development Status :: 4 - Beta',

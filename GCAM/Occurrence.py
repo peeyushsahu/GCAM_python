@@ -60,7 +60,7 @@ def joingenesynonym(colloccu, primarygemename, geneSyn):
     :param colloccu:
     :return:
     '''
-    print 'Shape of df before gene merge:', colloccu.shape
+    #print 'Shape of df before gene merge:', colloccu.shape
     col2drop = []
     for gene in primarygemename:
         if gene in geneSyn.index and geneSyn.loc[gene][1] != '0':
@@ -69,6 +69,6 @@ def joingenesynonym(colloccu, primarygemename, geneSyn):
                 col2drop.append(syn.lower())
                 colloccu[gene] = colloccu[gene] + colloccu[syn.lower()]
     colloccu = colloccu.drop(col2drop, axis=1)
-    print 'Shape of df after gene merge:', colloccu.shape
+    #print 'Shape of df after gene merge:', colloccu.shape
     return colloccu
 

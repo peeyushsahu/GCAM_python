@@ -1,39 +1,35 @@
 __author__ = 'peeyush'
-import timeit, os
+import timeit, sys
 from GCAM import Fetch_pmids
 from GCAM import Occurrence
 from GCAM import FilesFolders
 from GCAM import SignificanceTesting
 from GCAM import ExpressionAnalysis
 
-def gcam_analysis(args):
+def gcam_analysis(args, resource_path):
 
     tstart = timeit.default_timer()
 
     #save_location = '/home/peeyush/Desktop'
     save_location = args.outdir
-    FilesFolders.create_folders(save_location)
 
+    FilesFolders.create_folders(save_location)
     #genenames = ['aatf', 'prmt6', 'ski']
     genenames = FilesFolders.get_genes(args.path)
 
     subquery = args.subquery
     synonym = args.synonym
 
-    genenames = genenames[:50]
+    genenames = genenames
     primarygene = genenames
     organism = args.org
 
-    database_path = databasepath()
-    database_path = os.path.sep.join(database_path.strip().split(os.path.sep)[:-2])
-    database_path = os.path.sep.join([database_path, "GCAM", "resources"])
-    print database_path
-    annDB = FilesFolders.read_database(database_path)   #'/home/peeyush/NetBeansProjects/GCAM-1.0/resources'
-    cellDB = FilesFolders.celltype_DB(database_path)
-    cellSyn = FilesFolders.cell_synonym(database_path)
+    annDB = FilesFolders.read_database(resource_path)   #'/home/peeyush/NetBeansProjects/GCAM-1.0/resources'
+    cellDB = FilesFolders.celltype_DB(resource_path)
+    cellSyn = FilesFolders.cell_synonym(resource_path)
 
     if synonym:
-        geneSyn = FilesFolders.gene_synonym(database_path, organism)
+        geneSyn = FilesFolders.gene_synonym(resource_path, organism)
         genenames = Occurrence.gene2synonym(genenames, geneSyn)
         print 'Gene count after synonym:', len(genenames)
     occuDF = cellDB
@@ -41,7 +37,10 @@ def gcam_analysis(args):
     occu_time = 0
     total_abstract = 0
     abs_in_DB = 0
+    count = 0
     for gene in genenames:
+        sys.stdout.write("\rGenes analysed:%d" % count)
+        sys.stdout.flush()
         #print gene
         fstart = timeit.default_timer()
         GeneObj = Fetch_pmids.Genes(gene)
@@ -56,6 +55,7 @@ def gcam_analysis(args):
         occuDF = GeneObj.get_occurrence(cellDB=occuDF)
         ostop = timeit.default_timer()
         occu_time = occu_time + (ostop - ostart)
+        count += 1
 
     cellOccu = Occurrence.joincellsynonym(occuDF, cellSyn)
     if synonym:
@@ -87,14 +87,14 @@ def gcam_analysis(args):
         expObj.plotdf.to_csv(save_location+'/GCAM_output/GCAM_python_final_celltype_vs_expression.csv', sep=',', encoding='utf-8', ignore_index=True)
 
     tstop = timeit.default_timer()
-    print 'Total no. of genes: ', len(genenames)
+    print '\nTotal no. of genes: ', len(genenames)
     print 'Total no. of abstarcts: ', total_abstract
     print 'Total no. of abstarcts annotated in DB:', abs_in_DB
     print 'Total time elapsed: ', (tstop - tstart), ' sec'
     print 'Total time for pmid fetch: ', fetch_time, ' sec'
     print 'Total time for occurrence analysis: ', occu_time, ' sec'
 
-
+'''
 def databasepath():
     try:
         root = __file__
@@ -106,3 +106,4 @@ def databasepath():
         print "I'm sorry, but something is wrong."
         print "There is no __file__ variable. Please contact the author."
         sys.exit()
+'''

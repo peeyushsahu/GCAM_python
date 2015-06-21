@@ -2,6 +2,7 @@ from GCAM.HclustHeatMap import HiearchicalHeatmap
 __author__ = 'peeyush'
 import pandas as pd
 import scipy.stats as stats
+import os
 
 
 class SignificanceObject():
@@ -46,7 +47,7 @@ class SignificanceObject():
         '''
         hclustHeatmap = HiearchicalHeatmap()
         hclustHeatmap.frame = self.filheatmapdf
-        hclustHeatmap.path = path + '/GCAM_output/GCAM_heatMap.pdf'
+        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_output', 'GCAM_heatMap.pdf'])
         fig, axm, axcb, cb = hclustHeatmap.plot()
 
 
@@ -138,7 +139,7 @@ def scale_dataframe(df):
     new_max = 100
     new_min = 0
     list_of_rows = []
-    print 'Process: scaling of dataframe'
+    #print 'Process: scaling of dataframe'
     for r, v in df.iterrows():
         rows = []
         for val in v:
