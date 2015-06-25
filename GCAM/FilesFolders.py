@@ -1,6 +1,7 @@
 __author__ = 'peeyush'
 from pandas import read_csv
 import os, sys
+import time
 
 def create_folders(path):
     '''
@@ -14,10 +15,12 @@ def create_folders(path):
                "density_based_motif"]
     for folder in folders:
     '''
-    print 'Output directory created: ' + path +'/GCAM_output'
-    npath = path +'/GCAM_output'
+    print 'Output directory created: ' + path +'/GCAM_output_'+str(time.strftime("%d/%m/%Y"))+str(time.strftime("%H:%M:%S"))
+    npath = path + os.path.sep +'GCAM_output_'+str(time.strftime("%d-%m-%Y"))+'_'+str(time.strftime("%H:%M:%S"))
     if not os.path.exists(npath):
         os.makedirs(npath)
+        #os.chmod(npath, mode=777)
+    return npath
 
 def read_database(path):
     '''
@@ -25,7 +28,7 @@ def read_database(path):
     :param path:
     :return:
     '''
-    annoDB = read_csv(path + '/pmid_celltype_index_final.txt', header=0, sep="\t")
+    annoDB = read_csv(path + os.path.sep + 'pmid_celltype_index_final.txt', header=0, sep="\t")
     annoDB = annoDB.set_index(['pmid'])
     return annoDB
 
@@ -36,8 +39,9 @@ def celltype_DB(path):
     :param path:
     :return:
     '''
-    cellDB = read_csv(path + '/cellTypes.csv', header=None, sep=',')
+    cellDB = read_csv(path + os.path.sep + 'cellTypes.csv', header=None, sep=',')
     cellDB.columns = ['celltype']
+    cellDB['celltype'] = cellDB['celltype'].str.lower()
     return cellDB
 
 
@@ -47,7 +51,7 @@ def cell_synonym(path):
     :param path:
     :return:
     '''
-    cellSyn = read_csv(path + '/cell_type_synonyms_python.csv', header=0, sep=',')
+    cellSyn = read_csv(path + os.path.sep + 'cell_type_synonyms_python.csv', header=0, sep=',')
     return cellSyn
 
 def get_genes(path):
@@ -78,9 +82,9 @@ def gene_synonym(path, organism):
     :return:
     '''
     if organism == 'human':
-        geneSyn = read_csv(path + '/Human_synonym.txt', header=None, sep='\t')
+        geneSyn = read_csv(path + os.path.sep + 'Human_synonym.txt', header=None, sep='\t')
     elif organism == 'mouse':
-        geneSyn = read_csv(path + '/Mouse_synonym.txt', header=None, sep='\t')
+        geneSyn = read_csv(path + os.path.sep + 'Mouse_synonym.txt', header=None, sep='\t')
     geneSyn.columns = ['gene', 'synonym']
     geneSyn['gene'] = geneSyn['gene'].str.lower()
     geneSyn = geneSyn.set_index(geneSyn['gene'])
@@ -93,14 +97,29 @@ def read_expression_file(path):
     :return:
     '''
     try:
+        print 'exprs path:',path
         expressiondf = read_csv(path, header=0, sep=",")
-        if 'genes' in expressiondf.columns and 'FoldChange' in expressiondf.columns:
-            expressiondf['genes'] = expressiondf['genes'].str.lower()
-            expressiondf = expressiondf.set_index(expressiondf['genes'])
+        if 'SYMBOL' in expressiondf.columns:
+            expressiondf['SYMBOL'] = expressiondf['SYMBOL'].str.lower()
+            expressiondf = expressiondf.set_index(expressiondf['SYMBOL'])
         else:
-            print 'please name columns as genes and FoldChange'
+            print 'Error: please name columns as SYMBOL and FoldChange'
             sys.exit(0)
     except IOError:
         print "Error: Expression File does not appear to exist."
         sys.exit(0)
     return expressiondf
+
+def read_previous_occurrence_table(resource_path):
+    '''
+    This will read the occurrence database for already analysed genes to save time.
+    :param resource_path:
+    :return:
+    '''
+    try:
+        print 'reading previously analysed genes'
+        gene_occu_db = read_csv(resource_path + os.path.sep + 'gene_occu_db.csv', header=0, sep=",", index_col=0)
+    except:
+        print "Warning: gene_occu_db does not appear to exist. Analysis could take more time."
+        return None, False
+    return gene_occu_db, True

@@ -1,109 +1,69 @@
 __author__ = 'peeyush'
-import timeit, sys
-from GCAM import Fetch_pmids
+import timeit, os
 from GCAM import Occurrence
 from GCAM import FilesFolders
 from GCAM import SignificanceTesting
 from GCAM import ExpressionAnalysis
+from GCAM import Previous_genecheck
 
 def gcam_analysis(args, resource_path):
-
+    '''
+    Main GCAM function.
+    :param args:
+    :param resource_path:
+    :return: cell occurrence dataframe
+    '''
     tstart = timeit.default_timer()
-
-    #save_location = '/home/peeyush/Desktop'
     save_location = args.outdir
-
-    FilesFolders.create_folders(save_location)
-    #genenames = ['aatf', 'prmt6', 'ski']
     genenames = FilesFolders.get_genes(args.path)
-
     subquery = args.subquery
     synonym = args.synonym
-
-    genenames = genenames
     primarygene = genenames
     organism = args.org
-
-    annDB = FilesFolders.read_database(resource_path)   #'/home/peeyush/NetBeansProjects/GCAM-1.0/resources'
-    cellDB = FilesFolders.celltype_DB(resource_path)
+    ### Reading require databases
+    print 'Reading required DBs'
     cellSyn = FilesFolders.cell_synonym(resource_path)
 
     if synonym:
         geneSyn = FilesFolders.gene_synonym(resource_path, organism)
         genenames = Occurrence.gene2synonym(genenames, geneSyn)
         print 'Gene count after synonym:', len(genenames)
-    occuDF = cellDB
-    fetch_time = 0
-    occu_time = 0
-    total_abstract = 0
-    abs_in_DB = 0
-    count = 0
-    for gene in genenames:
-        sys.stdout.write("\rGenes analysed:%d" % count)
-        sys.stdout.flush()
-        #print gene
-        fstart = timeit.default_timer()
-        GeneObj = Fetch_pmids.Genes(gene)
-        GeneObj.get_pmids()
-        fstop = timeit.default_timer()
-        fetch_time = fetch_time + (fstop - fstart)
-        total_abstract += len(GeneObj.pmids) # calcuate total no of abstracts
-
-        ostart = timeit.default_timer()
-        GeneObj.get_pmid_pos(annoDB=annDB)
-        abs_in_DB += len(GeneObj.cellinpmid)
-        occuDF = GeneObj.get_occurrence(cellDB=occuDF)
-        ostop = timeit.default_timer()
-        occu_time = occu_time + (ostop - ostart)
-        count += 1
-
+    occuDF = Previous_genecheck.occurrence_df(genenames, resource_path, subquery)
     cellOccu = Occurrence.joincellsynonym(occuDF, cellSyn)
     if synonym:
         cellOccu = Occurrence.joingenesynonym(cellOccu, primarygene, geneSyn)
     cellOccu = cellOccu.set_index(cellOccu['celltype'])
     cellOccu = cellOccu.drop(['celltype'], axis=1)
-    cellOccu.to_csv(save_location+'/GCAM_output/GCAM_python_occurrence.csv', sep=',', encoding='utf-8', ignore_index=True)
-    #del annDB, cellDB, cellSyn
-
-    ###### Scale df for heatmap
+    outdir = FilesFolders.create_folders(save_location)
+    cellOccu.to_csv(outdir + os.path.sep + 'GCAM_python_occurrence.csv', sep=',', encoding='utf-8', ignore_index=True)
+    ###### Scale df for heatmap and do further analysis
     significanceDF = SignificanceTesting.SignificanceObject(cellOccu)
     significanceDF.heatmapdf_create()
-    significanceDF.heatmapdf.to_csv(save_location+'/GCAM_output/GCAM_python_final_occurrence.csv', sep=',', encoding='utf-8', ignore_index=True)
     significanceDF.fisher_occurrence_test()
-    significanceDF.pvaldf.to_csv(save_location+'/GCAM_output/GCAM_python_final_pval.csv', sep=',', encoding='utf-8', ignore_index=True)
-    significanceDF.adjpvaldf.to_csv(save_location+'/GCAM_output/GCAM_python_final_adjpval.csv', sep=',', encoding='utf-8', ignore_index=True)
-    significanceDF.cellgenedf.to_csv(save_location+'/GCAM_output/GCAM_python_final_cellGene.csv', sep=',', encoding='utf-8', ignore_index=True)
-    significanceDF.sigCelltypedf.to_csv(save_location+'/GCAM_output/GCAM_python_final_SigCelltypes.csv', sep=',', encoding='utf-8', ignore_index=True)
-    significanceDF.plot_heatmap(save_location)
-
-
+    significanceDF.plot_heatmap(outdir)
+    write_result(significanceDF, outdir)
     ###### Expression analysis of celltype
     subcommand = args.subcommand_name
     if subcommand == "exprbased":
-        expressiondf = FilesFolders.read_expression_file('/home/peeyush/Desktop/GCAM_expression.csv')
-
+        expressiondf = FilesFolders.read_expression_file(args.exppath)
         expObj = ExpressionAnalysis.ExpressionData(expressiondf)
-        expObj.celltype_expression(significanceDF.sigCelltypedf, significanceDF.cellgenedf, save_location)
-        expObj.plotdf.to_csv(save_location+'/GCAM_output/GCAM_python_final_celltype_vs_expression.csv', sep=',', encoding='utf-8', ignore_index=True)
+        expObj.celltype_expression(significanceDF.sigCelltypedf, significanceDF.cellgenedf, outdir)
 
     tstop = timeit.default_timer()
-    print '\nTotal no. of genes: ', len(genenames)
-    print 'Total no. of abstarcts: ', total_abstract
-    print 'Total no. of abstarcts annotated in DB:', abs_in_DB
     print 'Total time elapsed: ', (tstop - tstart), ' sec'
-    print 'Total time for pmid fetch: ', fetch_time, ' sec'
-    print 'Total time for occurrence analysis: ', occu_time, ' sec'
+    return cellOccu
 
-'''
-def databasepath():
-    try:
-        root = __file__
-        if os.path.islink(root):
-            root = os.path.realpath(root)
-            print os.path.dirname(os.path.abspath(root))
-        return os.path.dirname(os.path.abspath(root))
-    except:
-        print "I'm sorry, but something is wrong."
-        print "There is no __file__ variable. Please contact the author."
-        sys.exit()
-'''
+
+def write_result(significanceDF, outdir):
+    '''
+    Print all the output for genebased analysis.
+    :param significanceDF:
+    :return:
+    '''
+    #significanceDF.heatmapdf.to_csv(save_location+'/GCAM_output/GCAM_python_final_occurrence.csv', sep=',', encoding='utf-8', ignore_index=True)
+    #significanceDF.pvaldf.to_csv(save_location+'/GCAM_output/GCAM_python_final_pval.csv', sep=',', encoding='utf-8', ignore_index=True)
+    #significanceDF.adjpvaldf.to_csv(save_location+'/GCAM_output/GCAM_python_final_adjpval.csv', sep=',', encoding='utf-8', ignore_index=True)
+    cellgenedf = significanceDF.cellgenedf[significanceDF.cellgenedf['P-val'] < 0.05]
+    cellgenedf.to_csv(outdir + os.path.sep + 'GCAM_python_final_cellGene.csv', sep=',', encoding='utf-8', ignore_index=True)
+    sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['P-val'] < 0.05]
+    sigCelltypedf.to_csv(outdir + os.path.sep + 'GCAM_python_final_SigCelltypes.csv', sep=',', encoding='utf-8', ignore_index=True)

@@ -20,7 +20,12 @@ def gene2synonym(geneList, geneSyn):
 
 
 def get_occurrence(genes_dict, cellDB):
-    #Calculate celltype occurrence for each gene.
+    '''
+    Calculate celltype occurrence for each gene.
+    :param genes_dict:
+    :param cellDB:
+    :return:
+    '''
     celloccu = cellDB
     # print cellDB
     for k, v in genes_dict.iteritems():

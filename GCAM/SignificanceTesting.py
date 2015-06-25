@@ -47,7 +47,7 @@ class SignificanceObject():
         '''
         hclustHeatmap = HiearchicalHeatmap()
         hclustHeatmap.frame = self.filheatmapdf
-        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_output', 'GCAM_heatMap.pdf'])
+        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.pdf'])
         fig, axm, axcb, cb = hclustHeatmap.plot()
 
 
@@ -92,7 +92,7 @@ class SignificanceObject():
                                                    , ignore_index=True)
         cellgenedf.columns = column
         self.cellgenedf = cellgenedf
-        self.fisher_significant_celltypes()    #### def()
+        self.fisher_significant_celltypes()
 
     def fisher_significant_celltypes(self):
         '''
@@ -108,14 +108,20 @@ class SignificanceObject():
         for celltype, val in cellgroup:
             #print 'celltype:'+celltype
             a = len(val[val['FDR'] < 0.05])
-            b = len(val) - a
+            b = len(val[val['P-val'] < 0.5]) - a
             cc = c - a
             dd = d - (a+b+c)
             #print a, ':', b, ':', cc, ':', dd
             oddsRatio, pval = stats.fisher_exact([[a, b], [cc, dd]])
             #print pval
-            sigcelltype = sigcelltype.append(pd.Series([celltype, pval, oddsRatio]), ignore_index=True)
-        sigcelltype.columns = ['CellType', 'P-val', 'OddsRatio']
+            sigcelltype = sigcelltype.append(pd.Series([celltype, pval]), ignore_index=True) #, oddsRatio
+        sigcelltype.columns = ['CellType', 'P-val'] #, 'OddsRatio'
+        sigcelltype['adj-pval'] = 0
+        length = len(sigcelltype)
+        for k, v in sigcelltype.iterrows():
+            if v['P-val'] < 0.05/length:
+                sigcelltype.loc[k,'adj-pval'] = v['P-val']*length
+            else:sigcelltype.loc[k,'adj-pval'] = 1
         self.sigCelltypedf = sigcelltype
 
 
