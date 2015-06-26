@@ -11,6 +11,10 @@ class Genes():
 
 
     def get_pmids(self):
+        '''
+        This function fetches pmids for provided genes.
+        :return:
+        '''
         from Bio import Entrez
         gene = self.gene.strip()
         subquery = self.subquery

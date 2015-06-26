@@ -35,7 +35,7 @@ def main():
     #print cache_filename
     ### Calling GCAM analysis function with command line arguments
     analysis.gcam_analysis(args, cache_filename)
-    print 'Number os temp resource left: ', pkg_resources.cleanup_resources(force=False)
+    print 'Number of temp resource left: ', pkg_resources.cleanup_resources(force=False)
 
 
 
@@ -48,7 +48,7 @@ def arg_parser():
     import argparse
     description = "%(prog) -- A Gene Celltype Association Mining analysis"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0")
+    parser.add_argument("-v", "--version", action="version", version="%(prog)s 1.0.0")
     subparsers = parser.add_subparsers(dest='subcommand_name')
     # command for 'genebased'
     add_genebased_parser(subparsers)
@@ -64,7 +64,8 @@ def add_genebased_parser(parser):
     :return:
     '''
     argparser_genebased = parser.add_parser("genebased", help="Main GCAM Function: perform analysis independent of expression data.")
-    group_input = argparser_genebased.add_argument_group("Input files arguments")
+
+    group_input = argparser_genebased.add_argument_group("Genebased analysis arguments")
 
     group_input.add_argument("-o", "--outdir", dest="outdir", type=str, required=True,
                              help = "If specified all output files will be written to that directory. Default: the current working directory")
@@ -73,9 +74,9 @@ def add_genebased_parser(parser):
     group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
                              help="additional search term with gene name to select specific abstracts")
     group_input.add_argument("-s", "--synonym", type=bool, default=False, dest="synonym", choices=[True, False],
-                             help="If want to consider synonyms for query genes, default=False (False or True)")
+                             help="If you want to consider synonyms for query genes, default=False (False or True)")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
-                             help="If synonym is 1, name of organism (human or mouse), default=human")
+                             help="Only if synonym is True. Choose organism from human or mouse, default=human")
 
 
 def add_expressionbased_parser(parser):
@@ -85,7 +86,8 @@ def add_expressionbased_parser(parser):
     :return:
     '''
     argparser_exprbased = parser.add_parser("exprbased", help="GCAM Function: perform analysis dependent of expression data.")
-    group_input = argparser_exprbased.add_argument_group("Input files arguments")
+
+    group_input = argparser_exprbased.add_argument_group("Expression based analysis arguments")
 
     group_input.add_argument("-o", "--outdir", dest="outdir", type=str, required=True,
                              help = "If specified all output files will be written to that directory. Default: the current working directory")
@@ -96,9 +98,9 @@ def add_expressionbased_parser(parser):
     group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
                              help="additional search term with gene name to select specific abstracts")
     group_input.add_argument("-s", "--synonym", type=bool, default=False, dest="synonym", choices=[True, False],
-                             help="If want to consider synonyms for query genes, default=False (False or True)")
+                             help="If you want to consider synonyms for query genes, default=False (False or True)")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
-                             help="If synonym is 1, name of organism (human or mouse), default=human")
+                             help="Only if synonym is True. Choose organism from human or mouse, default=human")
 
 if __name__ == '__main__':
     try:

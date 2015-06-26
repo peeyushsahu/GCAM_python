@@ -53,7 +53,7 @@ def main():
               'numpy>=1.6',
               'matplotlib',
               'pandas',
-              'bio-biopython',
+              'biopython',
               'scipy',
           ],
           )
