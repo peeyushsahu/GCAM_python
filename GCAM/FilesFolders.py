@@ -15,7 +15,7 @@ def create_folders(path):
                "density_based_motif"]
     for folder in folders:
     '''
-    print 'Output directory created: ' + path +'/GCAM_output_'+str(time.strftime("%d/%m/%Y"))+str(time.strftime("%H:%M:%S"))
+    print 'Output directory created: ' + path + os.path.sep +'GCAM_output_'+str(time.strftime("%d/%m/%Y"))+str(time.strftime("%H:%M:%S"))
     npath = path + os.path.sep +'GCAM_output_'+str(time.strftime("%d-%m-%Y"))+'_'+str(time.strftime("%H:%M:%S"))
     if not os.path.exists(npath):
         os.makedirs(npath)
@@ -73,6 +73,27 @@ def get_genes(path):
     print 'Size of user provided gene list:', len(geneList)
     print 'No. of genes after removing duplicates:', len(f_genelist)
     return f_genelist
+
+def key_celltypes(path):
+    '''
+    Read input gene list.
+    :param path:
+    :return:
+    '''
+    celltypeList = []
+    path = path + os.path.sep + 'key_cellTypes.csv'
+    try:
+        with open(path) as file:
+            for cells in file:
+                cells = cells.strip()
+                celltypeList.append(cells.lower())
+    except IOError:
+        print "Error: File does not appear to exist."
+        sys.exit(1)
+    f_celltypes = list(set(celltypeList))
+    print 'Size of key gene list:', len(celltypeList)
+    #print 'No. of genes after removing duplicates:', len(f_genelist)
+    return f_celltypes
 
 def gene_synonym(path, organism):
     '''

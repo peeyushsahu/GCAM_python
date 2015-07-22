@@ -22,7 +22,7 @@ from setuptools import setup, Extension
 
 
 def main():
-    if float(sys.version[:3])<2.7 or float(sys.version[:3])>=2.8:
+    if float(sys.version[:3])<2.7 or float(sys.version[:3])>2.8:
         print "Warning: Python version is not 2.7.x"
         #sys.stderr.write("CRITICAL: Python version must be 2.7!\n")
         #sys.exit(1)
@@ -45,6 +45,7 @@ def main():
               'Intended Audience :: Science/Research',
               'License :: OSI Approved :: BSD License',
               'Operating System :: MacOS :: Linux',
+              'Operating System :: Microsoft :: Windows',
               'Operating System :: POSIX',
               'Topic :: Scientific/Engineering :: Bio-Informatics',
               'Programming Language :: Python',

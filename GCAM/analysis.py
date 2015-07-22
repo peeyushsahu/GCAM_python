@@ -15,6 +15,7 @@ def gcam_analysis(args, resource_path):
     '''
     tstart = timeit.default_timer()
     save_location = args.outdir
+    key_celltypes = True
     genenames = FilesFolders.get_genes(args.path)
     subquery = args.subquery
     synonym = args.synonym
@@ -32,6 +33,11 @@ def gcam_analysis(args, resource_path):
     cellOccu = Occurrence.joincellsynonym(occuDF, cellSyn)
     if synonym:
         cellOccu = Occurrence.joingenesynonym(cellOccu, primarygene, geneSyn)
+    ## Reduced celltypes
+    if key_celltypes:
+        key_celltypes = FilesFolders.key_celltypes(resource_path)
+        cellOccu = cellOccu[cellOccu['celltype'].isin(key_celltypes)]
+    print 'size of new df', len(cellOccu)
     cellOccu = cellOccu.set_index(cellOccu['celltype'])
     cellOccu = cellOccu.drop(['celltype'], axis=1)
     outdir = FilesFolders.create_folders(save_location)

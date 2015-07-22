@@ -53,7 +53,7 @@ class SignificanceObject():
 
     def fisher_occurrence_test(self):
         '''
-        This method will calculate significance of celltype using their occurrence.
+        This method will calculate significance of celltypes per gene using their occurrence.
         Statistical test used is Fisher Exact Test
         '''
         occu_df = self.occurrencedf
@@ -108,9 +108,9 @@ class SignificanceObject():
         for celltype, val in cellgroup:
             #print 'celltype:'+celltype
             a = len(val[val['FDR'] < 0.05])
-            b = len(val[val['P-val'] < 0.5]) - a
+            b = len(val[val['P-val'] < 1]) - a
             cc = c - a
-            dd = d - (a+b+c)
+            dd = d - (a+b+cc)
             #print a, ':', b, ':', cc, ':', dd
             oddsRatio, pval = stats.fisher_exact([[a, b], [cc, dd]])
             #print pval
