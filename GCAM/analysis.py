@@ -5,6 +5,7 @@ from GCAM import FilesFolders
 from GCAM import SignificanceTesting
 from GCAM import ExpressionAnalysis
 from GCAM import Previous_genecheck
+import pandas as pd
 
 def gcam_analysis(args, resource_path):
     '''
@@ -15,7 +16,7 @@ def gcam_analysis(args, resource_path):
     '''
     tstart = timeit.default_timer()
     save_location = args.outdir
-    key_celltypes = True
+    key_celltypes = False
     genenames = FilesFolders.get_genes(args.path)
     subquery = args.subquery
     synonym = args.synonym
@@ -41,6 +42,7 @@ def gcam_analysis(args, resource_path):
     cellOccu = cellOccu.set_index(cellOccu['celltype'])
     cellOccu = cellOccu.drop(['celltype'], axis=1)
     outdir = FilesFolders.create_folders(save_location)
+    pd.DataFrame(genenames, columns=['GeneNames']).to_csv(outdir + os.path.sep + 'input_gene_list.csv', sep=',', encoding='utf-8', index=False)
     cellOccu.to_csv(outdir + os.path.sep + 'GCAM_python_occurrence.csv', sep=',', encoding='utf-8', ignore_index=True)
     ###### Scale df for heatmap and do further analysis
     significanceDF = SignificanceTesting.SignificanceObject(cellOccu)

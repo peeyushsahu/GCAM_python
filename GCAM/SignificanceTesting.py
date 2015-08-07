@@ -104,24 +104,26 @@ class SignificanceObject():
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['CellType'])
         cellgenedf = self.cellgenedf
         c = len(cellgenedf[cellgenedf['FDR'] < 0.05])
-        d = len(cellgenedf)
+        d = len(cellgenedf) #[cellgenedf['P-val'] < 0.5]
         for celltype, val in cellgroup:
-            #print 'celltype:'+celltype
+            #print celltype
+            #print val
             a = len(val[val['FDR'] < 0.05])
             b = len(val[val['P-val'] < 1]) - a
             cc = c - a
             dd = d - (a+b+cc)
             #print a, ':', b, ':', cc, ':', dd
-            oddsRatio, pval = stats.fisher_exact([[a, b], [cc, dd]])
-            #print pval
-            sigcelltype = sigcelltype.append(pd.Series([celltype, pval]), ignore_index=True) #, oddsRatio
-        sigcelltype.columns = ['CellType', 'P-val'] #, 'OddsRatio'
-        sigcelltype['adj-pval'] = 0
+            oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
+            chi2, pval, dof, ex = stats.chi2_contingency([[a, b], [cc, dd]])
+            #print 'chi2:pval:',pval
+            #print 'celltype:'+celltype, p
+            sigcelltype = sigcelltype.append(pd.Series([celltype, a, pval]), ignore_index=True) #, oddsRatio
+        sigcelltype.columns = ['CellType', 'genecluster', 'P-val'] #, 'OddsRatio'
         length = len(sigcelltype)
         for k, v in sigcelltype.iterrows():
             if v['P-val'] < 0.05/length:
-                sigcelltype.loc[k,'adj-pval'] = v['P-val']*length
-            else:sigcelltype.loc[k,'adj-pval'] = 1
+                sigcelltype.loc[k, 'FDR'] = v['P-val']*length
+            else:sigcelltype.loc[k, 'FDR'] = 1
         self.sigCelltypedf = sigcelltype
 
 

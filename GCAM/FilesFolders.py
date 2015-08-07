@@ -15,7 +15,7 @@ def create_folders(path):
                "density_based_motif"]
     for folder in folders:
     '''
-    print 'Output directory created: ' + path + os.path.sep +'GCAM_output_'+str(time.strftime("%d/%m/%Y"))+str(time.strftime("%H:%M:%S"))
+    print 'Output directory created: ' + path + os.path.sep +'GCAM_output_'+str(time.strftime("%d-%m-%Y"))+str(time.strftime("%H:%M:%S"))
     npath = path + os.path.sep +'GCAM_output_'+str(time.strftime("%d-%m-%Y"))+'_'+str(time.strftime("%H:%M:%S"))
     if not os.path.exists(npath):
         os.makedirs(npath)
