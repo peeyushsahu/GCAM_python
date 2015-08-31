@@ -29,13 +29,13 @@ def main():
     argparser = arg_parser()
     args = argparser.parse_args()
     import pkg_resources, site
-    print 'Checking availability of resource: ', pkg_resources.resource_exists('GCAM', 'resources')
+    print ('Checking availability of resource: ', pkg_resources.resource_exists('GCAM', 'resources'))
     pkg_resources.set_extraction_path(site.getsitepackages()[0])
     cache_filename = pkg_resources.resource_filename('GCAM', 'resources')
     #print cache_filename
     ### Calling GCAM analysis function with command line arguments
     analysis.gcam_analysis(args, cache_filename)
-    print 'Number of temp resource left: ', pkg_resources.cleanup_resources(force=False)
+    print ('Number of temp resource left: ', pkg_resources.cleanup_resources(force=False))
 
 
 
@@ -104,7 +104,7 @@ def add_expressionbased_parser(parser):
 
 if __name__ == '__main__':
     try:
-        print "GCAM is running....."
+        print ("GCAM is running.....")
         main()
     except KeyboardInterrupt:
         sys.stderr.write("User interruption! :D Bye!\n")

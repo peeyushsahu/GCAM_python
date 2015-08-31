@@ -23,13 +23,13 @@ def gcam_analysis(args, resource_path):
     primarygene = genenames
     organism = args.org
     ### Reading require databases
-    print 'Reading required DBs'
+    print ('Reading required DBs')
     cellSyn = FilesFolders.cell_synonym(resource_path)
 
     if synonym:
         geneSyn = FilesFolders.gene_synonym(resource_path, organism)
         genenames = Occurrence.gene2synonym(genenames, geneSyn)
-        print 'Gene count after synonym:', len(genenames)
+        print ('Gene count after synonym:', len(genenames))
     occuDF = Previous_genecheck.occurrence_df(genenames, resource_path, subquery)
     cellOccu = Occurrence.joincellsynonym(occuDF, cellSyn)
     if synonym:
@@ -38,7 +38,7 @@ def gcam_analysis(args, resource_path):
     if key_celltypes:
         key_celltypes = FilesFolders.key_celltypes(resource_path)
         cellOccu = cellOccu[cellOccu['celltype'].isin(key_celltypes)]
-    print 'size of new df', len(cellOccu)
+    #print ('size of new df', len(cellOccu))
     cellOccu = cellOccu.set_index(cellOccu['celltype'])
     cellOccu = cellOccu.drop(['celltype'], axis=1)
     outdir = FilesFolders.create_folders(save_location)
@@ -58,7 +58,7 @@ def gcam_analysis(args, resource_path):
         expObj.celltype_expression(significanceDF.sigCelltypedf, significanceDF.cellgenedf, outdir)
 
     tstop = timeit.default_timer()
-    print 'Total time elapsed: ', (tstop - tstart), ' sec'
+    print ('Total time elapsed: ', (tstop - tstart), ' sec')
     return cellOccu
 
 

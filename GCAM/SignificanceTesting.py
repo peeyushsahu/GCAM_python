@@ -47,7 +47,7 @@ class SignificanceObject():
         '''
         hclustHeatmap = HiearchicalHeatmap()
         hclustHeatmap.frame = self.filheatmapdf
-        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.pdf'])
+        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.png'])
         fig, axm, axcb, cb = hclustHeatmap.plot()
 
 

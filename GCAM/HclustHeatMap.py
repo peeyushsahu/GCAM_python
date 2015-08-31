@@ -21,6 +21,7 @@ The documentation about the custom color gradients can be found here:
 
 # Third party modules #
 import numpy, matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as pyplot
 import scipy.cluster.hierarchy as sch
 import scipy.spatial.distance as dist
