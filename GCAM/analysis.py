@@ -16,20 +16,20 @@ def gcam_analysis(args, resource_path):
     '''
     tstart = timeit.default_timer()
     save_location = args.outdir
-    key_celltypes = False
+    key_celltypes = args.key_celltype_list
     genenames = FilesFolders.get_genes(args.path)
     subquery = args.subquery
     synonym = args.synonym
     primarygene = genenames
     organism = args.org
     ### Reading require databases
-    print 'Reading required DBs'
+    print ('Reading required DBs')
     cellSyn = FilesFolders.cell_synonym(resource_path)
 
     if synonym:
         geneSyn = FilesFolders.gene_synonym(resource_path, organism)
         genenames = Occurrence.gene2synonym(genenames, geneSyn)
-        print 'Gene count after synonym:', len(genenames)
+        print ('Gene count after synonym:' + str(len(genenames)))
     occuDF = Previous_genecheck.occurrence_df(genenames, resource_path, subquery)
     cellOccu = Occurrence.joincellsynonym(occuDF, cellSyn)
     if synonym:
@@ -38,7 +38,7 @@ def gcam_analysis(args, resource_path):
     if key_celltypes:
         key_celltypes = FilesFolders.key_celltypes(resource_path)
         cellOccu = cellOccu[cellOccu['celltype'].isin(key_celltypes)]
-    print 'size of new df', len(cellOccu)
+    #print ('size of new df', len(cellOccu))
     cellOccu = cellOccu.set_index(cellOccu['celltype'])
     cellOccu = cellOccu.drop(['celltype'], axis=1)
     outdir = FilesFolders.create_folders(save_location)
@@ -47,19 +47,22 @@ def gcam_analysis(args, resource_path):
     ###### Scale df for heatmap and do further analysis
     significanceDF = SignificanceTesting.SignificanceObject(cellOccu)
     significanceDF.heatmapdf_create()
-    significanceDF.fisher_occurrence_test()
-    significanceDF.plot_heatmap(outdir)
-    write_result(significanceDF, outdir)
-    ###### Expression analysis of celltype
-    subcommand = args.subcommand_name
-    if subcommand == "exprbased":
-        expressiondf = FilesFolders.read_expression_file(args.exppath)
-        expObj = ExpressionAnalysis.ExpressionData(expressiondf)
-        expObj.celltype_expression(significanceDF.sigCelltypedf, significanceDF.cellgenedf, outdir)
+    try:
+        significanceDF.plot_heatmap(outdir)
+        significanceDF.fisher_occurrence_test()
+        write_result(significanceDF, outdir)
+        ###### Expression analysis of celltype
+        subcommand = args.subcommand_name
+        if subcommand == "exprbased":
+            expressiondf = FilesFolders.read_expression_file(args.exppath)
+            expObj = ExpressionAnalysis.ExpressionData(expressiondf)
+            expObj.celltype_expression(significanceDF.sigCelltypedf, significanceDF.cellgenedf, outdir)
 
-    tstop = timeit.default_timer()
-    print 'Total time elapsed: ', (tstop - tstart), ' sec'
-    return cellOccu
+        tstop = timeit.default_timer()
+        print ('Total time elapsed: ' + str(tstop - tstart) + ' sec')
+        return cellOccu
+    except:
+        print("WARNING: Genes are not significantly enriched for celltypes or number of queries are < 2")
 
 
 def write_result(significanceDF, outdir):
@@ -72,6 +75,8 @@ def write_result(significanceDF, outdir):
     #significanceDF.pvaldf.to_csv(save_location+'/GCAM_output/GCAM_python_final_pval.csv', sep=',', encoding='utf-8', ignore_index=True)
     #significanceDF.adjpvaldf.to_csv(save_location+'/GCAM_output/GCAM_python_final_adjpval.csv', sep=',', encoding='utf-8', ignore_index=True)
     cellgenedf = significanceDF.cellgenedf[significanceDF.cellgenedf['P-val'] < 0.05]
-    cellgenedf.to_csv(outdir + os.path.sep + 'GCAM_python_final_cellGene.csv', sep=',', encoding='utf-8', ignore_index=True)
+    if len(cellgenedf)>0:cellgenedf.to_csv(outdir + os.path.sep + 'GCAM_sigenes.csv', sep=',', encoding='utf-8', ignore_index=True)
+    else: print('No significant genes for celltype')
     sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['P-val'] < 0.05]
-    sigCelltypedf.to_csv(outdir + os.path.sep + 'GCAM_python_final_SigCelltypes.csv', sep=',', encoding='utf-8', ignore_index=True)
+    if len(sigCelltypedf)>0:sigCelltypedf.to_csv(outdir + os.path.sep + 'GCAM_sigCelltypes.csv', sep=',', encoding='utf-8', ignore_index=True)
+    else: print('No significant celltypes')

@@ -21,6 +21,7 @@ The documentation about the custom color gradients can be found here:
 
 # Third party modules #
 import numpy, matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as pyplot
 import scipy.cluster.hierarchy as sch
 import scipy.spatial.distance as dist
@@ -174,7 +175,7 @@ class HiearchicalHeatmap():
             axm.text(self.frame.shape[1]-0.5, i, '  ' + row_header[idx1[i]], verticalalignment="center")
             new_row_header.append(row_header[idx1[i]] if self.row_method else row_header[i])
         for i in range(self.frame.shape[1]):
-            axm.text(i, -0.9, ' '+column_header[idx2[i]], rotation=90, verticalalignment="top", horizontalalignment="center")
+            axm.text(i, -0.5, ' '+column_header[idx2[i]], rotation=90, verticalalignment="top", horizontalalignment="center")
             new_column_header.append(column_header[idx2[i]] if self.column_method else column_header[i])
 
         # Plot column side colorbar #
@@ -207,9 +208,9 @@ class HiearchicalHeatmap():
 
         # Render the graphic #
         if len(row_header) > 80 or len(column_header) > 80:
-            pyplot.rcParams['font.size'] = 4
+            pyplot.rcParams['font.size'] = 3
         else:
-            pyplot.rcParams['font.size'] = 8
+            pyplot.rcParams['font.size'] = 4
         #print(pyplot.rcParams.find_all('\.size'))
         cb.set_label("Significance scale", fontsize=8)
         pyplot.savefig(self.path)

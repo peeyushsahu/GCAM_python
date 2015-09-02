@@ -15,8 +15,8 @@ def create_folders(path):
                "density_based_motif"]
     for folder in folders:
     '''
-    print 'Output directory created: ' + path + os.path.sep +'GCAM_output_'+str(time.strftime("%d-%m-%Y"))+str(time.strftime("%H:%M:%S"))
-    npath = path + os.path.sep +'GCAM_output_'+str(time.strftime("%d-%m-%Y"))+'_'+str(time.strftime("%H:%M:%S"))
+    print ('Output directory created: ' + os.path.join(path, 'GCAM_output_'+str(time.strftime("%d_%m_%Y"))+'_'+str(time.strftime("%H_%M_%S"))))
+    npath = os.path.join(path, 'GCAM_output_'+str(time.strftime("%d_%m_%Y"))+'_'+str(time.strftime("%H_%M_%S")))
     if not os.path.exists(npath):
         os.makedirs(npath)
         #os.chmod(npath, mode=777)
@@ -65,13 +65,14 @@ def get_genes(path):
         with open(path) as file:
             for gene in file:
                 gene = gene.strip()
-                geneList.append(gene.lower())
+                if len(gene) > 0:
+                    geneList.append(gene.lower())
     except IOError:
-        print "Error: File does not appear to exist."
+        print ("Error: File does not appear to exist.")
         sys.exit(1)
     f_genelist = list(set(geneList))
-    print 'Size of user provided gene list:', len(geneList)
-    print 'No. of genes after removing duplicates:', len(f_genelist)
+    print ('Size of user provided gene list:' + str(len(geneList)))
+    print ('No. of genes after removing duplicates:' + str(len(f_genelist)))
     return f_genelist
 
 def key_celltypes(path):
@@ -88,10 +89,10 @@ def key_celltypes(path):
                 cells = cells.strip()
                 celltypeList.append(cells.lower())
     except IOError:
-        print "Error: File does not appear to exist."
+        print ("Error: File does not appear to exist.")
         sys.exit(1)
     f_celltypes = list(set(celltypeList))
-    print 'Size of key gene list:', len(celltypeList)
+    print ('Size of key gene list:' + str(len(celltypeList)))
     #print 'No. of genes after removing duplicates:', len(f_genelist)
     return f_celltypes
 
@@ -118,16 +119,16 @@ def read_expression_file(path):
     :return:
     '''
     try:
-        print 'exprs path:',path
+        print ('exprs path:'+ path)
         expressiondf = read_csv(path, header=0, sep=",")
         if 'SYMBOL' in expressiondf.columns:
             expressiondf['SYMBOL'] = expressiondf['SYMBOL'].str.lower()
             expressiondf = expressiondf.set_index(expressiondf['SYMBOL'])
         else:
-            print 'Error: please name columns as SYMBOL and FoldChange'
+            print ('Error: please name columns as SYMBOL and FoldChange')
             sys.exit(0)
     except IOError:
-        print "Error: Expression File does not appear to exist."
+        print ("Error: Expression File does not appear to exist.")
         sys.exit(0)
     return expressiondf
 
@@ -138,9 +139,9 @@ def read_previous_occurrence_table(resource_path):
     :return:
     '''
     try:
-        print 'reading previously analysed genes'
-        gene_occu_db = read_csv(resource_path + os.path.sep + 'gene_occu_db.csv', header=0, sep=",", index_col=0)
+        print ('reading previously analysed genes')
+        gene_occu_db = read_csv(os.path.join(resource_path, 'gene_occu_db.csv'), header=0, sep=",", index_col=0)
     except:
-        print "Warning: gene_occu_db does not appear to exist. Analysis could take more time."
+        print ("Warning: gene_occu_db does not appear to exist. Analysis could take more time.")
         return None, False
     return gene_occu_db, True

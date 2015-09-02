@@ -47,7 +47,7 @@ class SignificanceObject():
         '''
         hclustHeatmap = HiearchicalHeatmap()
         hclustHeatmap.frame = self.filheatmapdf
-        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.pdf'])
+        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.png'])
         fig, axm, axcb, cb = hclustHeatmap.plot()
 
 
@@ -57,8 +57,8 @@ class SignificanceObject():
         Statistical test used is Fisher Exact Test
         '''
         occu_df = self.occurrencedf
-        pvaldf = pd.DataFrame(occu_df)
-        adjpvaldf = pd.DataFrame(occu_df)
+        pvaldf = pd.DataFrame()#occu_df
+        adjpvaldf = pd.DataFrame()#occu_df
         matsum = occu_df.sum().sum()
         for k, v in occu_df.iterrows():
             key = v.keys()
@@ -68,7 +68,12 @@ class SignificanceObject():
                 value = v[i]
                 colsum = occu_df[[i]].sum()[0] - value
                 rsum = rowsum - value
-                oddsratio, pval = stats.fisher_exact([[value, rsum], [colsum, matsum-(value+rsum+colsum)]])
+                if value != 0:
+                    #print matsum, value,rsum,colsum,occu_df[[i]].sum()[0]
+                    #print [value, rsum], [colsum, matsum-(value+rsum+colsum)]
+                    oddsratio, pval = stats.fisher_exact([[value, rsum], [colsum, matsum-(value+rsum+colsum)]])
+                else:
+                    pval = 1
                 pvaldf.loc[k, key[i]] = pval
                 if pval < 0.05/v.shape[0]:
                     adjpvaldf.loc[k, key[i]] = pval*v.shape[0]
@@ -76,6 +81,8 @@ class SignificanceObject():
                     adjpvaldf.loc[k, key[i]] = 1
         self.pvaldf = pvaldf
         self.adjpvaldf = adjpvaldf
+        #print pvaldf
+        #print adjpvaldf
         self.celltype_overrepresntation_list()  #### def()
 
     def celltype_overrepresntation_list(self):
@@ -112,12 +119,12 @@ class SignificanceObject():
             b = len(val[val['P-val'] < 1]) - a
             cc = c - a
             dd = d - (a+b+cc)
-            #print a, ':', b, ':', cc, ':', dd
+            #print a, ':', b, ':', cc, ':', dd, c, d
             oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
-            chi2, pval, dof, ex = stats.chi2_contingency([[a, b], [cc, dd]])
+            #chi2, pval, dof, ex = stats.chi2_contingency([[a, b], [cc, dd]])
             #print 'chi2:pval:',pval
             #print 'celltype:'+celltype, p
-            sigcelltype = sigcelltype.append(pd.Series([celltype, a, pval]), ignore_index=True) #, oddsRatio
+            sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True) #, oddsRatio
         sigcelltype.columns = ['CellType', 'genecluster', 'P-val'] #, 'OddsRatio'
         length = len(sigcelltype)
         for k, v in sigcelltype.iterrows():

@@ -41,7 +41,7 @@ class ExpressionData():
                 plotdf.to_csv(path + os.path.sep + 'GCAM_python_final_celltype_vs_expression_'+column+'.csv', sep=',', encoding='utf-8', ignore_index=True)
                 plot_expressionvseignificance(path, plotdf, column)
             else:
-                print 'No significant celltypes for the data'
+                print ('No significant celltypes for the data')
 
 
 def plot_expressionvseignificance(path, plotdf, column):
@@ -49,7 +49,7 @@ def plot_expressionvseignificance(path, plotdf, column):
     import numpy as np
 
     plotdf = plotdf[plotdf['p-val'] < 0.05]
-    print 'plotting significance plot'
+    print ('plotting significance plot')
     plotdf = plotdf.sort(['p-val'], ascending=True)
     l = plotdf['genecluster'].tolist()
     t = plotdf['p-val'].tolist()
@@ -77,7 +77,7 @@ def plot_expressionvseignificance(path, plotdf, column):
     plt.xlabel('P-Value', fontsize=12)
     plt.ylabel('Average Fold Change', fontsize=12)
     #plt.show()
-    plt.savefig(path + os.path.sep + column + 'GCAM_celltype_VS_expresiion.pdf')
+    plt.savefig(path + os.path.sep + column + 'GCAM_celltype_VS_expresiion.png')
     plt.clf()
 
 '''

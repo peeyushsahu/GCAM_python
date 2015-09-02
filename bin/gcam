@@ -29,13 +29,13 @@ def main():
     argparser = arg_parser()
     args = argparser.parse_args()
     import pkg_resources, site
-    print 'Checking availability of resource: ', pkg_resources.resource_exists('GCAM', 'resources')
-    pkg_resources.set_extraction_path(site.getsitepackages()[0])
+    #print ('Checking availability of resource: ', pkg_resources.resource_exists('GCAM', 'resources'))
+    #pkg_resources.set_extraction_path(site.getsitepackages()[0])
     cache_filename = pkg_resources.resource_filename('GCAM', 'resources')
     #print cache_filename
     ### Calling GCAM analysis function with command line arguments
     analysis.gcam_analysis(args, cache_filename)
-    print 'Number of temp resource left: ', pkg_resources.cleanup_resources(force=False)
+    #print ('Number of temp resource left: ', pkg_resources.cleanup_resources(force=False))
 
 
 
@@ -77,6 +77,8 @@ def add_genebased_parser(parser):
                              help="If you want to consider synonyms for query genes, default=False (False or True)")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
                              help="Only if synonym is True. Choose organism from human or mouse, default=human")
+    group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", required=False,
+                             help="To only analysis data for key celltypes.")
 
 
 def add_expressionbased_parser(parser):
@@ -101,10 +103,12 @@ def add_expressionbased_parser(parser):
                              help="If you want to consider synonyms for query genes, default=False (False or True)")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
                              help="Only if synonym is True. Choose organism from human or mouse, default=human")
+    group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", required=False,
+                             help="To only analysis data for key celltypes.")
 
 if __name__ == '__main__':
     try:
-        print "GCAM is running....."
+        print ("GCAM is running.....")
         main()
     except KeyboardInterrupt:
         sys.stderr.write("User interruption! :D Bye!\n")

@@ -66,7 +66,7 @@ def occurrence_df(genenames, resource_path, subquery):
     annDB = FilesFolders.read_database(resource_path)
     cellDB = FilesFolders.celltype_DB(resource_path)
     check_database_update(annDB, cellDB, resource_path)
-    print 'Checking for pre analysed genes....'
+    print ('Checking for pre analysed genes....')
     dataframe, created = FilesFolders.read_previous_occurrence_table(resource_path)
     join = False
     if not dataframe is None:
@@ -74,7 +74,7 @@ def occurrence_df(genenames, resource_path, subquery):
         join = True
     else:
         new_genenames = genenames
-    print 'Reading required DBs'
+    print ('Reading required DBs')
     occuDF = cellDB
     fetch_time = 0
     occu_time = 0
@@ -106,10 +106,10 @@ def occurrence_df(genenames, resource_path, subquery):
         update_dataframe.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
         occuDF = pd.concat([occuDF, foundgenes_df], axis=1)
 
-    print 'Total no. of abstarcts: ', total_abstract
-    print 'Total no. of abstarcts annotated in DB:', abs_in_DB
-    print 'Total time for pmid fetch: ', fetch_time, ' sec'
-    print 'Total time for occurrence analysis: ', occu_time, ' sec'
+    print ('Total no. of abstarcts: ' + str(total_abstract))
+    print ('Total no. of abstarcts annotated in DB:' + str(abs_in_DB))
+    print ('Total time for pmid fetch: ' +  str(fetch_time) + ' sec')
+    print ('Total time for occurrence analysis: ' + str(occu_time) + ' sec')
     #print foundgenes_df.head()
     #print occuDF.head()
     return occuDF
