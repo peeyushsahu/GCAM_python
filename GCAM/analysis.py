@@ -43,7 +43,7 @@ def gcam_analysis(args, resource_path):
     cellOccu = cellOccu.drop(['celltype'], axis=1)
     outdir = FilesFolders.create_folders(save_location)
     pd.DataFrame(genenames, columns=['GeneNames']).to_csv(outdir + os.path.sep + 'input_gene_list.csv', sep=',', encoding='utf-8', index=False)
-    cellOccu.to_csv(outdir + os.path.sep + 'GCAM_python_occurrence.csv', sep=',', encoding='utf-8', ignore_index=True)
+    cellOccu.to_csv(outdir + os.path.sep + 'GCAM_python_occurrence.csv', sep='\t', encoding='utf-8', ignore_index=True)
     ###### Scale df for heatmap and do further analysis
     significanceDF = SignificanceTesting.SignificanceObject(cellOccu)
     significanceDF.heatmapdf_create()
@@ -62,7 +62,7 @@ def gcam_analysis(args, resource_path):
         print ('Total time elapsed: ' + str(tstop - tstart) + ' sec')
         return cellOccu
     except:
-        print("WARNING: Genes are not significantly enriched for celltypes or number of queries are < 2")
+        raise Warning("Genes are not significantly enriched for celltypes or number of queries are < 2")
 
 
 def write_result(significanceDF, outdir):
@@ -74,9 +74,12 @@ def write_result(significanceDF, outdir):
     #significanceDF.heatmapdf.to_csv(save_location+'/GCAM_output/GCAM_python_final_occurrence.csv', sep=',', encoding='utf-8', ignore_index=True)
     #significanceDF.pvaldf.to_csv(save_location+'/GCAM_output/GCAM_python_final_pval.csv', sep=',', encoding='utf-8', ignore_index=True)
     #significanceDF.adjpvaldf.to_csv(save_location+'/GCAM_output/GCAM_python_final_adjpval.csv', sep=',', encoding='utf-8', ignore_index=True)
-    cellgenedf = significanceDF.cellgenedf[significanceDF.cellgenedf['P-val'] < 0.05]
-    if len(cellgenedf)>0:cellgenedf.to_csv(outdir + os.path.sep + 'GCAM_sigenes.csv', sep=',', encoding='utf-8', ignore_index=True)
+
+    cellgenedf = significanceDF.cellgenedf[significanceDF.cellgenedf['FDR'] < 0.05]
+    cellgenedf.sort(['P-val'], ascending=True)
+    if len(cellgenedf)>0:cellgenedf.to_csv(outdir + os.path.sep + 'GCAM_sigenes.csv', sep='\t', encoding='utf-8', index=False)
     else: print('No significant genes for celltype')
-    sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['P-val'] < 0.05]
-    if len(sigCelltypedf)>0:sigCelltypedf.to_csv(outdir + os.path.sep + 'GCAM_sigCelltypes.csv', sep=',', encoding='utf-8', ignore_index=True)
+    sigCelltypedf = significanceDF.sigCelltypedf#[significanceDF.sigCelltypedf['P-val'] < 0.05]
+    sigCelltypedf.sort(['P-val'], ascending=True)
+    if len(sigCelltypedf)>0:sigCelltypedf.to_csv(outdir + os.path.sep + 'GCAM_sigCelltypes.csv', sep='\t', encoding='utf-8', index=False)
     else: print('No significant celltypes')

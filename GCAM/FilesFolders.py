@@ -28,7 +28,10 @@ def read_database(path):
     :param path:
     :return:
     '''
-    annoDB = read_csv(path + os.path.sep + 'pmid_celltype_index_final.txt', header=0, sep="\t")
+    try:
+        annoDB = read_csv(path + os.path.sep + 'pmid_celltype_index_final.txt', header=0, sep="\t")
+    except:
+        raise ValueError("annotation db doesnot exist.")
     annoDB = annoDB.set_index(['pmid'])
     return annoDB
 
@@ -39,7 +42,10 @@ def celltype_DB(path):
     :param path:
     :return:
     '''
-    cellDB = read_csv(path + os.path.sep + 'cellTypes.csv', header=None, sep=',')
+    try:
+        cellDB = read_csv(path + os.path.sep + 'cellTypes.csv', header=None, sep=',')
+    except:
+        raise ValueError("celltype db does not exist.")
     cellDB.columns = ['celltype']
     cellDB['celltype'] = cellDB['celltype'].str.lower()
     return cellDB
@@ -51,7 +57,10 @@ def cell_synonym(path):
     :param path:
     :return:
     '''
-    cellSyn = read_csv(path + os.path.sep + 'cell_type_synonyms_python.csv', header=0, sep=',')
+    try:
+        cellSyn = read_csv(path + os.path.sep + 'cell_type_synonyms_python.csv', header=0, sep=',')
+    except:
+        raise ValueError("Synonym db does not exist.")
     return cellSyn
 
 def get_genes(path):
@@ -68,8 +77,10 @@ def get_genes(path):
                 if len(gene) > 0:
                     geneList.append(gene.lower())
     except IOError:
-        print ("Error: File does not appear to exist.")
+        print ("Error: Query file does not appear to exist.")
         sys.exit(1)
+    if len(geneList) == 0:
+        raise IOError("Empty query list.")
     f_genelist = list(set(geneList))
     print ('Size of user provided gene list:' + str(len(geneList)))
     print ('No. of genes after removing duplicates:' + str(len(f_genelist)))
@@ -89,7 +100,7 @@ def key_celltypes(path):
                 cells = cells.strip()
                 celltypeList.append(cells.lower())
     except IOError:
-        print ("Error: File does not appear to exist.")
+        print ("Error: Key celltype db does not exist.")
         sys.exit(1)
     f_celltypes = list(set(celltypeList))
     print ('Size of key gene list:' + str(len(celltypeList)))
@@ -103,10 +114,13 @@ def gene_synonym(path, organism):
     :param organism:
     :return:
     '''
-    if organism == 'human':
-        geneSyn = read_csv(path + os.path.sep + 'Human_synonym.txt', header=None, sep='\t')
-    elif organism == 'mouse':
-        geneSyn = read_csv(path + os.path.sep + 'Mouse_synonym.txt', header=None, sep='\t')
+    try:
+        if organism == 'human':
+            geneSyn = read_csv(path + os.path.sep + 'Human_synonym.txt', header=None, sep='\t')
+        elif organism == 'mouse':
+            geneSyn = read_csv(path + os.path.sep + 'Mouse_synonym.txt', header=None, sep='\t')
+    except:
+        raise ValueError("Synonym db does not exist.")
     geneSyn.columns = ['gene', 'synonym']
     geneSyn['gene'] = geneSyn['gene'].str.lower()
     geneSyn = geneSyn.set_index(geneSyn['gene'])
@@ -142,6 +156,6 @@ def read_previous_occurrence_table(resource_path):
         print ('reading previously analysed genes')
         gene_occu_db = read_csv(os.path.join(resource_path, 'gene_occu_db.csv'), header=0, sep=",", index_col=0)
     except:
-        print ("Warning: gene_occu_db does not appear to exist. Analysis could take more time.")
+        print ("Warning: Creating Gene occurrence db, analysis will take longer.")
         return None, False
     return gene_occu_db, True

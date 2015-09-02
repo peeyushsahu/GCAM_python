@@ -48,7 +48,7 @@ def arg_parser():
     import argparse
     description = "%(prog) -- A Gene Celltype Association Mining analysis"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("-v", "--version", action="version", version="%(prog)s 1.0.0")
+    parser.add_argument("-v", "--version", action="version", version="%(prog)s 1.0.0", help="Version of software")
     subparsers = parser.add_subparsers(dest='subcommand_name')
     # command for 'genebased'
     add_genebased_parser(subparsers)
@@ -78,7 +78,7 @@ def add_genebased_parser(parser):
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
                              help="Only if synonym is True. Choose organism from human or mouse, default=human")
     group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", required=False,
-                             help="To only analysis data for key celltypes.")
+                             help="This will calculate the enrichment of data for the selected key cell-types.")
 
 
 def add_expressionbased_parser(parser):
@@ -103,12 +103,11 @@ def add_expressionbased_parser(parser):
                              help="If you want to consider synonyms for query genes, default=False (False or True)")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
                              help="Only if synonym is True. Choose organism from human or mouse, default=human")
-    group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", required=False,
+    group_input.add_argument("-k", "--keycelltype", type=bool, default=True, dest="key_celltype_list", required=False,
                              help="To only analysis data for key celltypes.")
 
 if __name__ == '__main__':
     try:
-        print ("GCAM is running.....")
         main()
     except KeyboardInterrupt:
         sys.stderr.write("User interruption! :D Bye!\n")

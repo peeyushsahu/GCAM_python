@@ -1,4 +1,4 @@
-from GCAM.HclustHeatMap import HiearchicalHeatmap
+from GCAM.plots import HiearchicalHeatmap
 __author__ = 'peeyush'
 import pandas as pd
 import scipy.stats as stats
@@ -69,8 +69,6 @@ class SignificanceObject():
                 colsum = occu_df[[i]].sum()[0] - value
                 rsum = rowsum - value
                 if value != 0:
-                    #print matsum, value,rsum,colsum,occu_df[[i]].sum()[0]
-                    #print [value, rsum], [colsum, matsum-(value+rsum+colsum)]
                     oddsratio, pval = stats.fisher_exact([[value, rsum], [colsum, matsum-(value+rsum+colsum)]])
                 else:
                     pval = 1
@@ -81,8 +79,6 @@ class SignificanceObject():
                     adjpvaldf.loc[k, key[i]] = 1
         self.pvaldf = pvaldf
         self.adjpvaldf = adjpvaldf
-        #print pvaldf
-        #print adjpvaldf
         self.celltype_overrepresntation_list()  #### def()
 
     def celltype_overrepresntation_list(self):
@@ -116,16 +112,15 @@ class SignificanceObject():
             #print celltype
             #print val
             a = len(val[val['FDR'] < 0.05])
-            b = len(val[val['P-val'] < 1]) - a
+            b = len(val[val['P-val'] < 0.05]) - a
             cc = c - a
             dd = d - (a+b+cc)
             #print a, ':', b, ':', cc, ':', dd, c, d
-            oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
-            #chi2, pval, dof, ex = stats.chi2_contingency([[a, b], [cc, dd]])
-            #print 'chi2:pval:',pval
-            #print 'celltype:'+celltype, p
-            sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True) #, oddsRatio
-        sigcelltype.columns = ['CellType', 'genecluster', 'P-val'] #, 'OddsRatio'
+            if a > 0:
+                oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
+                #print 'celltype:'+celltype, p
+                sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True)
+        sigcelltype.columns = ['CellType', 'genecluster', 'P-val']
         length = len(sigcelltype)
         for k, v in sigcelltype.iterrows():
             if v['P-val'] < 0.05/length:
