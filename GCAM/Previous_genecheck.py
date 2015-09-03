@@ -80,7 +80,7 @@ def occurrence_df(genenames, resource_path, subquery):
     occu_time = 0
     total_abstract = 0
     abs_in_DB = 0
-    count = 0
+    count = 0 + len(foundgenes_df)
     for gene in new_genenames:
         sys.stdout.write("\rGenes analysed:%d" % count)
         sys.stdout.flush()
@@ -106,10 +106,10 @@ def occurrence_df(genenames, resource_path, subquery):
         update_dataframe.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
         occuDF = pd.concat([occuDF, foundgenes_df], axis=1)
 
-    print ('Total no. of abstarcts: ' + str(total_abstract))
-    print ('Total no. of abstarcts annotated in DB:' + str(abs_in_DB))
-    print ('Total time for pmid fetch: ' +  str(fetch_time) + ' sec')
-    print ('Total time for occurrence analysis: ' + str(occu_time) + ' sec')
+    #print ('Total no. of abstarcts: ' + str(total_abstract))
+    #print ('Total no. of abstarcts annotated in DB:' + str(abs_in_DB))
+    #print ('Total time for pmid fetch: ' +  str(fetch_time) + ' sec')
+    #print ('Total time for occurrence analysis: ' + str(occu_time) + ' sec')
     #print foundgenes_df.head()
     #print occuDF.head()
     return occuDF

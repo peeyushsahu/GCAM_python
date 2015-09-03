@@ -79,7 +79,7 @@ def write_result(significanceDF, outdir):
     cellgenedf.sort(['P-val'], ascending=True)
     if len(cellgenedf)>0:cellgenedf.to_csv(outdir + os.path.sep + 'GCAM_sigenes.csv', sep='\t', encoding='utf-8', index=False)
     else: print('No significant genes for celltype')
-    sigCelltypedf = significanceDF.sigCelltypedf#[significanceDF.sigCelltypedf['P-val'] < 0.05]
+    sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 1]
     sigCelltypedf.sort(['P-val'], ascending=True)
     if len(sigCelltypedf)>0:sigCelltypedf.to_csv(outdir + os.path.sep + 'GCAM_sigCelltypes.csv', sep='\t', encoding='utf-8', index=False)
     else: print('No significant celltypes')

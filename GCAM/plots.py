@@ -209,10 +209,10 @@ class HiearchicalHeatmap():
         # Render the graphic #
         if len(row_header) > 30 or len(column_header) > 30:
             #print ('more than 80', len(row_header))
-            pyplot.rcParams['font.size'] = 4
+            pyplot.rcParams['font.size'] = 2
         else:
             #print 'less than 80', len(row_header)
-            pyplot.rcParams['font.size'] = 8
+            pyplot.rcParams['font.size'] = 6
         #print(pyplot.rcParams.find_all('\.size'))
         cb.set_label("Significance scale", fontsize=8)
         pyplot.savefig(self.path)
@@ -269,13 +269,16 @@ class StackedBarGrapher:
     def __init__(self): pass
 
     def demo(self):
-        d = np.array([[1.,1.,1.,1.,1.,1.,1.],
-                      [92.,3.,0.,4.,5.,6.,0.]])
+        d = np.array([[92.,3.,0.,4.,5.,6.,0.,92.,3.,0.,4.,5.,6.,0.,92.,3.,0.,4.,5.,6.,0.,92.,3.,0.,4.,5.],
+                      [1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]])
 
         d_heights = [1.,2.,3.,4.,5.,6.]
-        d_widths = [.5,1.,3.,2.,1.,2.]
-        d_labels = ["fred","julie"]
-        d_colors = ['#2166ac', '#fee090', '#fdbb84', '#fc8d59', '#e34a33', '#b30000', '#777777']
+        d_widths = [1.,.3]
+        d_labels = ["cell types","query"]
+        d_colors = ['#2166ac', '#fee090', '#fdbb84', '#fc8d59', '#e34a33', '#b30000', '#777777', '#FFC0CB',
+                    '#FFDAB9', '#CD853F', '#6A5ACD', '#FFDAB9', '#CD853F', '#FFC0CB', '#DDA0DD', '#B0E0E6',
+                    '#800080', '#663399', '#FF0000', '#BC8F8F', '#4169E1', '#8B4513', '#FA8072', '#F4A460',
+                    '#2E8B57', '#FFF5EE']
         gap = 0.05
 
         fig = plt.figure()
@@ -283,11 +286,12 @@ class StackedBarGrapher:
         self.stackedBarPlot(ax6,
                             d,
                             d_colors,
-                            edgeCols=['#000000']*7,
+                            edgeCols=['#000000']*27,
                             xLabels=d_labels,
                             scale=True,
                             gap=gap,
-                            endGaps=True
+                            endGaps=True,
+                            widths=d_widths
                             )
         plt.title("Scaled bars + gaps + end gaps")
 
@@ -427,6 +431,35 @@ class StackedBarGrapher:
             ax.tick_params(axis='y', which='both', labelsize=8, direction="out")
             ax.yaxis.tick_left()
             plt.yticks(yTicks[0], yTicks[1])
+            ax2 = ax.twinx()
+            ax2.tick_params(axis='y', which='both', labelsize=8, direction="in")
+            ax2.yaxis.tick_right()
+            plt.yticks(np.arange(26.)/(25), ['Epithelial cell',
+                                    'Langerhans cell',
+                                    'megacaryocyte',
+                                    'macrophage',
+                                    'Alverolar macrophage',
+                                    'monocyte',
+                                    'osteoclast',
+                                    'dendritic cell',
+                                    'microglia',
+                                    'granulocyte',
+                                    'neutrophil',
+                                    'mast cell',
+                                    'T lymphocyte',
+                                    'B lymphocyte',
+                                    'Natural killer cell',
+                                    'Kupffer cell',
+                                    'Plasma cell',
+                                    'naive B cell',
+                                    'naive T cell',
+                                    'memory T cell',
+                                    'memory B cell',
+                                    'eosinophil',
+                                    'neutrophil',
+                                    'CD8 T cell',
+                                    'CD4 T cell',
+                                    'regulatory T cell'])
         else:
             plt.yticks([], [])
 
