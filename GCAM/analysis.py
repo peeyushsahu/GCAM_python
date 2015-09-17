@@ -5,6 +5,7 @@ from GCAM import FilesFolders
 from GCAM import SignificanceTesting
 from GCAM import ExpressionAnalysis
 from GCAM import Previous_genecheck
+from GCAM import plots
 import pandas as pd
 
 def gcam_analysis(args, resource_path):
@@ -47,22 +48,22 @@ def gcam_analysis(args, resource_path):
     ###### Scale df for heatmap and do further analysis
     significanceDF = SignificanceTesting.SignificanceObject(cellOccu)
     significanceDF.heatmapdf_create()
-    try:
-        significanceDF.plot_heatmap(outdir)
-        significanceDF.fisher_occurrence_test()
-        write_result(significanceDF, outdir)
-        ###### Expression analysis of celltype
-        subcommand = args.subcommand_name
-        if subcommand == "exprbased":
-            expressiondf = FilesFolders.read_expression_file(args.exppath)
-            expObj = ExpressionAnalysis.ExpressionData(expressiondf)
-            expObj.celltype_expression(significanceDF.sigCelltypedf, significanceDF.cellgenedf, outdir)
+    #try:
+    significanceDF.plot_heatmap(outdir)
+    significanceDF.fisher_occurrence_test()
+    write_result(significanceDF, outdir)
+    ###### Expression analysis of celltype
+    subcommand = args.subcommand_name
+    if subcommand == "exprbased":
+        expressiondf = FilesFolders.read_expression_file(args.exppath)
+        expObj = ExpressionAnalysis.ExpressionData(expressiondf)
+        expObj.celltype_expression(significanceDF.sigCelltypedf, significanceDF.cellgenedf, outdir)
 
-        tstop = timeit.default_timer()
-        print ('Total time elapsed: ' + str(tstop - tstart) + ' sec')
-        return cellOccu
-    except:
-        raise Warning("Genes are not significantly enriched for celltypes or number of queries are < 2")
+    tstop = timeit.default_timer()
+    print ('Total time elapsed: ' + str(tstop - tstart) + ' sec')
+    return cellOccu
+    #except:
+    #    raise Warning("Genes are not significantly enriched for celltypes or number of queries are < 2")
 
 
 def write_result(significanceDF, outdir):
@@ -80,6 +81,7 @@ def write_result(significanceDF, outdir):
     if len(cellgenedf)>0:cellgenedf.to_csv(outdir + os.path.sep + 'GCAM_sigenes.csv', sep='\t', encoding='utf-8', index=False)
     else: print('No significant genes for celltype')
     sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 1]
+    plots.stack_barplot(sigCelltypedf, outdir)
     sigCelltypedf.sort(['P-val'], ascending=True)
     if len(sigCelltypedf)>0:sigCelltypedf.to_csv(outdir + os.path.sep + 'GCAM_sigCelltypes.csv', sep='\t', encoding='utf-8', index=False)
     else: print('No significant celltypes')

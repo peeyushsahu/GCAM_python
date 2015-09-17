@@ -120,7 +120,7 @@ class SignificanceObject():
                 oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
                 #print 'celltype:'+celltype, p
                 sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True)
-        sigcelltype.columns = ['CellType', 'genecluster', 'P-val']
+        sigcelltype.columns = ['celltype', 'genecluster', 'P-val']
         length = len(sigcelltype)
         for k, v in sigcelltype.iterrows():
             if v['P-val'] < 0.05/length:
