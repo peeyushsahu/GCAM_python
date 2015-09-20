@@ -224,25 +224,44 @@ class HiearchicalHeatmap():
         return fig, axm, axcb, cb
 
 
-def stack_barplot(sigcelltype, path):
-    cells = [1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]
-    genes = [0.]*len(cells)
+def stack_barplot(sigcelltype, path, key_celltypes):
+
     d_labels = ["enrichment", "celltype"]
-    d_widths = [.5, .1]
+    d_widths = [0.5, 0.1]
     d_colors = ['#006699', '#33D6AD', '#CCFF33', '#0033CC', '#FFFF00', '#009900', '#CC3300', '#FFCC99',
                 '#99CCFF', '#CC6699', '#CC99FF', '#6600FF', '#CD853F', '#FFC0CB', '#FF9900', '#B0E0E6',
                 '#800080', '#663399', '#70dd3e', '#BC8F8F', '#4169E1', '#8B4513', '#FA8072', '#F4A460',
                 '#2E8B57', '#ffc8a2']
-    cell_type = ['Epithelial cell', 'Langerhans cell', 'megacaryocyte', 'macrophage', 'Alverolar macrophage',
-                'monocyte', 'osteoclast', 'dendritic cell', 'microglia', 'granulocyte', 'neutrophil', 'mast cell',
-                'T lymphocyte', 'B lymphocyte', 'Natural killer cell', 'Kupffer cell', 'Plasma cell',
-                'naive B cell', 'naive T cell', 'memory T cell', 'memory B cell', 'eosinophil', 'neutrophil',
-                'CD8 T cell', 'CD4 T cell', 'regulatory T cell']
-    cell_type = map(str.lower, cell_type)
-    for i, r in sigcelltype.iterrows():
-        #print i, r
-        ind = cell_type.index(r['celltype'])
-        genes[ind] = float(r['genecluster'])
+    if not key_celltypes:
+        if len(sigcelltype) > 15: sigcelltype = sigcelltype[:15]
+        cells = [1.0]*len(sigcelltype)
+        genes = [0.0]*len(cells)
+        number_label = float(len(sigcelltype))
+        adjustment = 0.03
+        plot_color = d_colors[:len(cells)]
+        sigcelltype = sigcelltype.sort(['P-val'], ascending=True)
+        sigcelltype.index = range(0, len(sigcelltype))
+        cell_type = sigcelltype['celltype']
+        for ind, row in sigcelltype.iterrows():
+            genes[ind] = float(row['genecluster'])
+
+    else:
+        cell_type = ['Epithelial cell', 'Langerhans cell', 'megacaryocyte', 'macrophage', 'Alverolar macrophage',
+                    'monocyte', 'osteoclast', 'dendritic cell', 'microglia', 'granulocyte', 'neutrophil', 'mast cell',
+                    'Natural killer cell', 'Kupffer cell', 'Plasma cell', 'eosinophil', 'neutrophil',
+                    'naive B cell', 'memory B cell', 'B lymphocyte', 'T lymphocyte', 'naive T cell',
+                    'memory T cell', 'CD8 T cell', 'CD4 T cell', 'regulatory T cell']
+        cells = [1.0]*len(cell_type)
+        genes = [0.0]*len(cell_type)
+        number_label = float(len(cell_type))
+        adjustment = 0.02
+        plot_color = d_colors[:len(cells)]
+        cell_type = map(str.lower, cell_type)
+        for i, r in sigcelltype.iterrows():
+            #print i, r
+            ind = cell_type.index(r['celltype'])
+            genes[ind] = float(1-r['genecluster']) #genecluster
+
     stplot = np.array([genes, cells])
     #print stplot
     gap = 0.02
@@ -250,8 +269,11 @@ def stack_barplot(sigcelltype, path):
     ax6 = fig.add_subplot(111)
     stackedBarPlot(ax6,
                     stplot,
-                    d_colors,
-                    edgeCols=['#000000']*27,
+                    plot_color,
+                    cell_type,
+                    number_label,
+                    adjustment,
+                    edgeCols=['#000000']*int(number_label),
                     xLabels=d_labels,
                     scale=True,
                     gap=gap,
@@ -269,8 +291,11 @@ def stack_barplot(sigcelltype, path):
 def stackedBarPlot(ax,                                 # axes to plot onto
                    data,                               # data to plot
                    cols,                               # colors for each level
+                   cell_type,
+                   no_label,
+                   adjustment,
                    xLabels = None,                     # bar specific labels
-                   yTicks = 6.,                        # information used for making y ticks ["none", <int> or [[tick_pos1, tick_pos2, ... ],[tick_label_1, tick_label2, ...]]
+                   yTicks = 6.0,                        # information used for making y ticks ["none", <int> or [[tick_pos1, tick_pos2, ... ],[tick_label_1, tick_label2, ...]]
                    edgeCols=None,                      # colors for edges
                    showFirst=-1,                       # only plot the first <showFirst> bars
                    scale=False,                        # scale bars to same height
@@ -358,7 +383,8 @@ def stackedBarPlot(ax,                                 # axes to plot onto
         edgeCols = ["none"]*len(cols)
 
     # take cae of gaps
-    gapd_widths = [i - gap*4 if(widths.index(i) == len(widths)-1) else i-gap for i in widths]
+    gapd_widths = [i - gap*4 if(widths.index(i) == len(widths)-1) else i-gap*6 for i in widths]
+    #print gapd_widths
 
     # bars
     ax.bar(x,
@@ -397,32 +423,7 @@ def stackedBarPlot(ax,                                 # axes to plot onto
         ax2 = ax.twinx()
         ax2.tick_params(axis='y', which='both', labelsize=8, direction='out')
         ax2.yaxis.tick_right()
-        plt.yticks(np.arange(26.)/(26)+0.02, ['Epithelial cell',
-                                'Langerhans cell',
-                                'megacaryocyte',
-                                'macrophage',
-                                'Alverolar macrophage',
-                                'monocyte',
-                                'osteoclast',
-                                'dendritic cell',
-                                'microglia',
-                                'granulocyte',
-                                'neutrophil',
-                                'mast cell',
-                                'T lymphocyte',
-                                'B lymphocyte',
-                                'Natural killer cell',
-                                'Kupffer cell',
-                                'Plasma cell',
-                                'naive B cell',
-                                'naive T cell',
-                                'memory T cell',
-                                'memory B cell',
-                                'eosinophil',
-                                'neutrophil',
-                                'CD8 T cell',
-                                'CD4 T cell',
-                                'regulatory T cell'])
+        plt.yticks(np.arange(no_label)/(no_label)+adjustment, cell_type)
     else:
         plt.yticks([], [])
 
@@ -447,9 +448,42 @@ def stackedBarPlot(ax,                                 # axes to plot onto
         plt.ylabel(ylabel)
 
 #########################################
-'''
-if __name__ == '__main__':
+def plot_celltypesignificance(path, plotdf):
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import math
+    print ('plotting celltype significance plot')
+    plotdf = plotdf[plotdf['FDR'] < 0.05]
+    l = plotdf['genecluster'].tolist()
+    t = plotdf['P-val'].tolist()
+    s = range(1, len(plotdf)+1)
+    name = plotdf['celltype'].tolist()
+    area = [(math.log(x, 10) * -15) for x in t]
+    color = np.random.random(len(t))
+    print area
+    plt.scatter(s, l, s=area, c=color, alpha=0.5)
+    plt.grid(True, linestyle=':', color='black')
 
-    SBG = StackedBarGrapher()
-    SBG.demo()
-'''
+    for i in range(0, len(t)):
+        plt.annotate(name[i], xy=(s[i], l[i]), xycoords='data',
+            xytext=(0,15), textcoords='offset points',
+            ha='center', va='bottom',
+            bbox=dict(boxstyle='round, pad=0.2', fc='yellow', alpha=0.2),
+            fontsize=8)
+
+    l1 = plt.scatter([],[], s=50, c='gray', alpha=0.5)
+    l2 = plt.scatter([],[], s=200, c='gray', alpha=0.5)
+    labels = ["less significant", "highly significant"]
+    plt.legend([l1, l2], labels, ncol=2, frameon=True, fontsize=8,
+    handlelength=2, loc = 4, borderpad = 0.5,
+    handletextpad=1, scatterpoints = 1)
+
+    plt.tick_params(axis='both', labelsize=8)
+    plt.xlim(0, len(plotdf)+2)
+    plt.ylim(0, max(l)+20)
+    plt.title('Cell-type significance', fontsize=14)
+    plt.xlabel('Celltypes', fontsize=12)
+    plt.ylabel('Gene cluster size', fontsize=12)
+    plt.tight_layout()
+    plt.savefig(os.path.join(path, 'GCAM_SigCelltype.png'))
+    plt.clf()

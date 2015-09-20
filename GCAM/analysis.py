@@ -51,7 +51,7 @@ def gcam_analysis(args, resource_path):
     #try:
     significanceDF.plot_heatmap(outdir)
     significanceDF.fisher_occurrence_test()
-    write_result(significanceDF, outdir)
+    write_result(significanceDF, outdir, key_celltypes)
     ###### Expression analysis of celltype
     subcommand = args.subcommand_name
     if subcommand == "exprbased":
@@ -66,7 +66,7 @@ def gcam_analysis(args, resource_path):
     #    raise Warning("Genes are not significantly enriched for celltypes or number of queries are < 2")
 
 
-def write_result(significanceDF, outdir):
+def write_result(significanceDF, outdir, key_celltypes):
     '''
     Print all the output for genebased analysis.
     :param significanceDF:
@@ -80,8 +80,10 @@ def write_result(significanceDF, outdir):
     cellgenedf.sort(['P-val'], ascending=True)
     if len(cellgenedf)>0:cellgenedf.to_csv(outdir + os.path.sep + 'GCAM_sigenes.csv', sep='\t', encoding='utf-8', index=False)
     else: print('No significant genes for celltype')
+
     sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 1]
-    plots.stack_barplot(sigCelltypedf, outdir)
+    plots.stack_barplot(sigCelltypedf, outdir, key_celltypes)
+    plots.plot_celltypesignificance(outdir, sigCelltypedf)
     sigCelltypedf.sort(['P-val'], ascending=True)
     if len(sigCelltypedf)>0:sigCelltypedf.to_csv(outdir + os.path.sep + 'GCAM_sigCelltypes.csv', sep='\t', encoding='utf-8', index=False)
     else: print('No significant celltypes')

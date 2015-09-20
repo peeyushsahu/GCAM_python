@@ -22,7 +22,7 @@ class ExpressionData():
                 if v['P-val'] < 0.1:
                     #print v['CellType']
                     expression_list = []
-                    df = gene2cell_group.get_group(v['CellType'])
+                    df = gene2cell_group.get_group(v['celltype'])
                     #print df.shape
                     for key, val in df.iterrows():
                         if val['P-val'] < 0.001:
@@ -33,7 +33,7 @@ class ExpressionData():
                     #print 'exprssion list for gene', v['CellType'], expression_list
                     fold_change = 0
                     if len(expression_list) > 0:fold_change = sum(expression_list)/len(expression_list)
-                    plotdf = plotdf.append(pd.Series([v['CellType'], v['genecluster'],v['P-val'], fold_change]), ignore_index=True)
+                    plotdf = plotdf.append(pd.Series([v['celltype'], v['genecluster'],v['P-val'], fold_change]), ignore_index=True)
                     #print [v['CellType'], v['P-val'], fold_change]
             if len(plotdf) > 0:
                 plotdf.columns = ['celltype', 'genecluster', 'p-val', 'relative_expression']
@@ -47,7 +47,7 @@ class ExpressionData():
 def plot_expressionvseignificance(path, plotdf, column):
     import matplotlib.pyplot as plt
     import numpy as np
-
+    import math
     plotdf = plotdf[plotdf['p-val'] < 0.05]
     print ('plotting significance plot')
     plotdf = plotdf.sort(['p-val'], ascending=True)
@@ -55,28 +55,37 @@ def plot_expressionvseignificance(path, plotdf, column):
     t = plotdf['p-val'].tolist()
     s = plotdf['relative_expression'].tolist()
     name = plotdf['celltype'].tolist()
-    area = [x*15 for x in l]
+    area = [(math.log(x, 10) * -15) for x in t]
     color = np.random.random(len(t))
-    plt.scatter(t, s, s=area, c=color, alpha=0.5)
+    #print color, '\n', l, '\n', t
+    plt.scatter(l, s, s=area, c=color, alpha=0.5)
     plt.grid(True, linestyle=':', color='black')
     # draw a thick red hline at y=0 that spans the xrange
-    l = plt.axhline(linewidth=1, color='r', linestyle='--')
+    h = plt.axhline(linewidth=1, color='r', linestyle='--')
 
     # draw a default vline at x=1 that spans the yrange
-    l = plt.axvline(linewidth=1, color='r', x=0.001, linestyle='--')
+    h = plt.axvline(linewidth=1, color='r', x=0.001, linestyle='--')
     for i in range(0, len(t)):
-        plt.annotate(name[i], xy=(t[i], s[i]), xycoords='data',
+        plt.annotate(name[i], xy=(l[i], s[i]), xycoords='data',
             xytext=(-10,1), textcoords='offset points',
             ha='center', va='bottom',
             bbox=dict(boxstyle='round, pad=0.2', fc='yellow', alpha=0.2),
             fontsize=8)
+
+    l1 = plt.scatter([],[], s=50, c='gray', alpha=0.5)
+    l2 = plt.scatter([],[], s=200, c='gray', alpha=0.5)
+    labels = ["less significant", "highly significant"]
+    plt.legend([l1, l2], labels, ncol=2, frameon=True, fontsize=8,
+    handlelength=2, loc = 4, borderpad = 0.5,
+    handletextpad=1, scatterpoints = 1)
+
     plt.tick_params(axis='both', labelsize=8)
-    plt.xlim(-0.01, max(t)+0.01)
-    plt.ylim(-10,10)
-    plt.title('Expression vs Significance ' + column, fontsize=14)
-    plt.xlabel('P-Value', fontsize=12)
+    plt.xlim(0, max(l)+20)
+    plt.ylim(min(s)-2,max(s)+2)
+    plt.title('Relative Cell-type expression plot' + column, fontsize=14)
+    plt.xlabel('Gene cluster size', fontsize=12)
     plt.ylabel('Average Fold Change', fontsize=12)
-    #plt.show()
+    plt.tight_layout()
     plt.savefig(path + os.path.sep + column + 'GCAM_celltype_VS_expresiion.png')
     plt.clf()
 
