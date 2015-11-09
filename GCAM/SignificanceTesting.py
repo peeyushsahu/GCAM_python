@@ -106,12 +106,12 @@ class SignificanceObject():
         #print self.cellgenedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['CellType'])
         cellgenedf = self.cellgenedf
-        c = len(cellgenedf[cellgenedf['FDR'] < 0.05])
+        c = len(cellgenedf[cellgenedf['P-val'] < 0.001])
         d = len(cellgenedf) #[cellgenedf['P-val'] < 0.5]
         for celltype, val in cellgroup:
             #print celltype
             #print val
-            a = len(val[val['FDR'] < 0.05])
+            a = len(val[val['P-val'] < 0.001])
             b = len(val[val['P-val'] < 0.05]) - a
             cc = c - a
             dd = d - (a+b+cc)

@@ -1,5 +1,5 @@
 __author__ = 'peeyush'
-
+import FilesFolders
 
 def gene2synonym(geneList, geneSyn):
     '''
@@ -27,7 +27,6 @@ def get_occurrence(genes_dict, cellDB):
     :return:
     '''
     celloccu = cellDB
-    # print cellDB
     for k, v in genes_dict.iteritems():
         celloccu[k] = 0
         celltype = v.cellinpmid
@@ -49,9 +48,10 @@ def joincellsynonym(celloccu, cellSyn):
     indexRem = []
     #print colname
     for k, v in cellSyn.iterrows():
-        index = celloccu.celltype[celloccu.celltype == v['cell'].strip().lower()].index.tolist()[0]
+        index = celloccu.celltype[celloccu.celltype == v['cell'].lower()].index.tolist()[0]
         for cell in v['synonyms'].split(','):
-            indexsyn = celloccu.celltype[celloccu.celltype == cell.strip().lower()].index.tolist()[0]
+            #print cell
+            indexsyn = celloccu.celltype[celloccu.celltype == cell.lower()].index.tolist()[0]
             indexRem.append(indexsyn)
             for col in colname:
                 if col != 'celltype' and col != 'Unnamed: 0':
@@ -77,3 +77,21 @@ def joingenesynonym(colloccu, primarygemename, geneSyn):
     #print 'Shape of df after gene merge:', colloccu.shape
     return colloccu
 
+def subtract_cellnamepeat(celloccu, path):
+    '''
+    This will subtract count from ex. t lymphocyte that belongs to cd4 t cells
+    :return:
+    '''
+    subtract_df = FilesFolders.read_cell_subtractdf(path)
+    colnames = celloccu.columns
+    #print celloccu.index
+    #print subtract_df
+    for k, v in subtract_df.iterrows():
+        for cell in v['subs'].split(','):
+            cell = cell.lower()
+            for gene in colnames:
+                #print gene
+                if celloccu.loc[v['celltype'], gene] > 0:
+                    celloccu.loc[v['celltype'], gene] = celloccu.loc[v['celltype'], gene] - celloccu.loc[cell, gene]
+    #print celloccu
+    return celloccu

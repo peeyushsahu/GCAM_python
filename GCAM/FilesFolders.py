@@ -3,6 +3,7 @@ from pandas import read_csv
 import os, sys
 import time
 
+
 def create_folders(path):
     '''
     folders = ["overlap",
@@ -126,6 +127,7 @@ def gene_synonym(path, organism):
     geneSyn = geneSyn.set_index(geneSyn['gene'])
     return geneSyn
 
+
 def read_expression_file(path):
     '''
     Reads expression data for analysis
@@ -133,18 +135,14 @@ def read_expression_file(path):
     :return:
     '''
     try:
-        print ('exprs path:'+ path)
-        expressiondf = read_csv(path, header=0, sep=",")
-        if 'SYMBOL' in expressiondf.columns:
-            expressiondf['SYMBOL'] = expressiondf['SYMBOL'].str.lower()
-            expressiondf = expressiondf.set_index(expressiondf['SYMBOL'])
-        else:
-            print ('Error: please name columns as SYMBOL and FoldChange')
-            sys.exit(0)
+        #print ('exprs path:'+ path)
+        expressiondf = read_csv(path, header=0, sep="\t", index_col=0)
+        expressiondf.index = expressiondf.index.str.lower()
     except IOError:
         print ("Error: Expression File does not appear to exist.")
         sys.exit(0)
     return expressiondf
+
 
 def read_previous_occurrence_table(resource_path):
     '''
@@ -159,3 +157,34 @@ def read_previous_occurrence_table(resource_path):
         print ("Warning: Creating Gene occurrence db, analysis will take longer.")
         return None, False
     return gene_occu_db, True
+
+def read_pheno_data(path):
+    '''
+    Reads pheno-data for analysis
+    :param path:
+    :return:
+    '''
+    try:
+        #print ('pheno path:'+ path)
+        phenodf = read_csv(path, header=0, sep="\t")
+        if not 'phenotype' in phenodf.columns or not 'sample' in phenodf.columns:
+            print ('Error phenotype: please name columns as phenotype and sample')
+            sys.exit(0)
+    except IOError:
+        print ("Error: pheno File does not appear to exist.")
+        sys.exit(0)
+    return phenodf
+
+def read_cell_subtractdf(path):
+    '''
+    Reads pheno-data for analysis
+    :param path:
+    :return:
+    '''
+    try:
+        cellsub_df = read_csv(os.path.join(path, 'celltype_subtract.txt'), header=0, sep="\t")
+        #print cellsub_df
+    except IOError:
+        print ("Error: cell_subtract db does not appear to exist.")
+        sys.exit(0)
+    return cellsub_df

@@ -224,46 +224,84 @@ class HiearchicalHeatmap():
         return fig, axm, axcb, cb
 
 
-def stack_barplot(sigcelltype, path, key_celltypes):
-
-    d_labels = ["enrichment", "celltype"]
-    d_widths = [0.5, 0.1]
+def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
+    print 'Key_celltypes', key_celltypes
+    d_labels = ["celltype"]
+    d_widths = [0.1]
+    stackplot_data = []
     d_colors = ['#006699', '#33D6AD', '#CCFF33', '#0033CC', '#FFFF00', '#009900', '#CC3300', '#FFCC99',
                 '#99CCFF', '#CC6699', '#CC99FF', '#6600FF', '#CD853F', '#FFC0CB', '#FF9900', '#B0E0E6',
                 '#800080', '#663399', '#70dd3e', '#BC8F8F', '#4169E1', '#8B4513', '#FA8072', '#F4A460',
-                '#2E8B57', '#ffc8a2']
+                '#2E8B57', '#ffc8a2','#00FF00', '#FFFF66', '#191919', '#bcffad']
     if not key_celltypes:
         if len(sigcelltype) > 15: sigcelltype = sigcelltype[:15]
         cells = [1.0]*len(sigcelltype)
-        genes = [0.0]*len(cells)
         number_label = float(len(sigcelltype))
         adjustment = 0.03
         plot_color = d_colors[:len(cells)]
-        sigcelltype = sigcelltype.sort(['P-val'], ascending=True)
-        sigcelltype.index = range(0, len(sigcelltype))
-        cell_type = sigcelltype['celltype']
-        for ind, row in sigcelltype.iterrows():
-            genes[ind] = float(row['genecluster'])
-
+        #print sigcelltype
+        genes = [0.0]*len(cells)
+        stackplot_data.append(cells)
+        if method == 'genebased':
+            sigcelltype = sigcelltype.sort(['P-val'], ascending=True)
+            sigcelltype.index = range(0, len(sigcelltype))
+            cell_type = sigcelltype['celltype']
+            for ind, row in sigcelltype.iterrows():
+                genes[ind] = float(row['genecluster'])
+            stackplot_data.insert(0, genes)
+            d_labels.insert(0, 'sample')
+            d_widths.insert(0, 0.5)
+        if method == 'exprbased':
+            sigcelltype['celltype'] = sigcelltype.index
+            sigcelltype = sigcelltype.sort(['P-val'], ascending=True)
+            sigcelltype.index = range(0, len(sigcelltype))
+            cell_type = sigcelltype['celltype']
+            cols = [col for col in sigcelltype.columns if 'FC' in col]
+            print cols
+            for col in cols:
+                genes = [0.0]*len(cells)
+                for ind, row in sigcelltype.iterrows():
+                    genes[ind] = float(row[col])
+                stackplot_data.insert(0, genes)
+                d_labels.insert(0, col)
+                d_widths.insert(0, 0.5)
     else:
         cell_type = ['Epithelial cell', 'Langerhans cell', 'megacaryocyte', 'macrophage', 'Alverolar macrophage',
                     'monocyte', 'osteoclast', 'dendritic cell', 'microglia', 'granulocyte', 'neutrophil', 'mast cell',
                     'Natural killer cell', 'Kupffer cell', 'Plasma cell', 'eosinophil', 'neutrophil',
                     'naive B cell', 'memory B cell', 'B lymphocyte', 'T lymphocyte', 'naive T cell',
-                    'memory T cell', 'CD8 T cell', 'CD4 T cell', 'regulatory T cell']
+                    'memory T cell', 'CD8 T cell', 'CD4 T cell', 'regulatory T cell','Cytotoxic T cell',
+                    'helper T cell','m1 macrophage','m2 macrophage']
         cells = [1.0]*len(cell_type)
-        genes = [0.0]*len(cell_type)
         number_label = float(len(cell_type))
         adjustment = 0.02
         plot_color = d_colors[:len(cells)]
         cell_type = map(str.lower, cell_type)
-        for i, r in sigcelltype.iterrows():
-            #print i, r
-            ind = cell_type.index(r['celltype'])
-            genes[ind] = float(1-r['genecluster']) #genecluster
 
-    stplot = np.array([genes, cells])
-    #print stplot
+        if method == 'genebased':
+            stackplot_data.append(cells)
+            genes = [0.0]*len(cells)
+            for i, r in sigcelltype.iterrows():
+                ind = cell_type.index(r['celltype'])
+                genes[ind] = float(r['genecluster'])
+            stackplot_data.insert(0, genes)
+            d_labels.insert(0, 'sample')
+            d_widths.insert(0, 0.5)
+        if method == 'exprbased':
+            stackplot_data.append(cells)
+            #cols = [col for col in sigcelltype.columns if 'FC' in col]
+            for col in sigcelltype.columns:
+                genes = [0.0]*len(cells)
+                for i, r in sigcelltype.iterrows():
+                    #print i
+                    ind = cell_type.index(i)
+                    genes[ind] = float(r[col])
+                stackplot_data.insert(0, genes)
+                d_labels.insert(0, col)
+                d_widths.insert(0, 0.5)
+    #print stackplot_data
+    #print d_labels
+    stplot = np.array(stackplot_data) #[genes, cells] stackplot list of list
     gap = 0.02
     fig = plt.figure()
     ax6 = fig.add_subplot(111)
@@ -281,9 +319,9 @@ def stack_barplot(sigcelltype, path, key_celltypes):
                     widths=d_widths
                     )
     plt.title("Relative abundance of celltype")
-    fig.subplots_adjust(bottom=0.4)
+    #fig.subplots_adjust(bottom=0.4)
     plt.tight_layout()
-    plt.savefig(os.path.join(path, 'GCAM_reletive_celltype_stacks.png'))
+    plt.savefig(os.path.join(path, 'GCAM_'+method+'_stacks.png'))
     plt.clf()
     #return
 
@@ -383,7 +421,7 @@ def stackedBarPlot(ax,                                 # axes to plot onto
         edgeCols = ["none"]*len(cols)
 
     # take cae of gaps
-    gapd_widths = [i - gap*4 if(widths.index(i) == len(widths)-1) else i-gap*6 for i in widths]
+    gapd_widths = [i - gap*2 if(widths.index(i) == len(widths)-1) else i-gap*2 for i in widths]
     #print gapd_widths
 
     # bars
@@ -430,7 +468,7 @@ def stackedBarPlot(ax,                                 # axes to plot onto
     if xLabels is not None:
         ax.tick_params(axis='x', which='both', labelsize=8, direction="out")
         ax.xaxis.tick_bottom()
-        plt.xticks(x, xLabels, rotation='vertical')
+        plt.xticks(x, xLabels, rotation=45)
     else:
         plt.xticks([], [])
 
@@ -470,7 +508,7 @@ def plot_celltypesignificance(path, plotdf):
             ha='center', va='bottom',
             bbox=dict(boxstyle='round, pad=0.2', fc='yellow', alpha=0.2),
             fontsize=8)
-
+## plot legend
     l1 = plt.scatter([],[], s=50, c='gray', alpha=0.5)
     l2 = plt.scatter([],[], s=200, c='gray', alpha=0.5)
     labels = ["less significant", "highly significant"]
@@ -480,7 +518,7 @@ def plot_celltypesignificance(path, plotdf):
 
     plt.tick_params(axis='both', labelsize=8)
     plt.xlim(0, len(plotdf)+2)
-    plt.ylim(0, max(l)+20)
+    plt.ylim(0, max(l)+5)
     plt.title('Cell-type significance', fontsize=14)
     plt.xlabel('Celltypes', fontsize=12)
     plt.ylabel('Gene cluster size', fontsize=12)

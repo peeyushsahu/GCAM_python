@@ -69,10 +69,11 @@ def occurrence_df(genenames, resource_path, subquery):
     print ('Checking for pre analysed genes....')
     dataframe, created = FilesFolders.read_previous_occurrence_table(resource_path)
     join = False
-    if not dataframe is None:
+    if dataframe is not None:
         new_genenames, foundgenes_df = check_old_analysed_genes(genenames, dataframe)
         join = True
     else:
+        foundgenes_df = pd.DataFrame()
         new_genenames = genenames
     print ('Reading required DBs')
     occuDF = cellDB
@@ -86,7 +87,7 @@ def occurrence_df(genenames, resource_path, subquery):
         sys.stdout.flush()
         #print gene
         fstart = timeit.default_timer()
-        GeneObj = Fetch_pmids.Genes(gene, subquery)
+        GeneObj = Fetch_pmids.Genes(gene=gene, subquery=subquery, resource_path=resource_path)
         GeneObj.get_pmids()
         fstop = timeit.default_timer()
         fetch_time = fetch_time + (fstop - fstart)
@@ -99,6 +100,8 @@ def occurrence_df(genenames, resource_path, subquery):
         ostop = timeit.default_timer()
         occu_time = occu_time + (ostop - ostart)
         count += 1
+    joincellsynonym(occuDF, resource_path)
+
     if not created:
         occuDF.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
     if join:
@@ -114,3 +117,27 @@ def occurrence_df(genenames, resource_path, subquery):
     #print occuDF.head()
     return occuDF
 
+def joincellsynonym(celloccu, resource_path):
+    '''
+    Join multiple cell synonym to one.
+    :param celloccu:
+    :param cellSyn:
+    :return:
+    '''
+    cellSyn = FilesFolders.cell_synonym(resource_path)
+    colname = celloccu.columns.values.tolist()
+    indexRem = []
+    print celloccu
+    for k, v in cellSyn.iterrows():
+        index = celloccu.celltype[celloccu.celltype == v['cell'].lower()].index.tolist()[0]
+        for cell in v['synonyms'].split(','):
+            #print cell
+            indexsyn = celloccu.celltype[celloccu.celltype == cell.lower()].index.tolist()[0]
+            indexRem.append(indexsyn)
+            ## adding synonym
+            for col in colname:
+                if col != 'celltype' and col != 'Unnamed: 0':
+                    celloccu.loc[index, col] = celloccu.loc[index, col] + celloccu.loc[indexsyn, col]
+    celloccu = celloccu.drop(celloccu.index[indexRem])
+    print celloccu
+    return celloccu

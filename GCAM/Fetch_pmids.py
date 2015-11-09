@@ -1,13 +1,14 @@
 __author__ = 'peeyush'
-
+import FilesFolders
 
 class Genes():
-    def __init__(self, gene, subquery=None):
+    def __init__(self, gene, subquery=None, resource_path=None):
         self.gene = gene
         self.subquery = subquery
         self.pmids = None
         self.cellinpmid = None
         self.occurrence = None
+        self.resource_path = resource_path
 
 
     def get_pmids(self):
@@ -55,12 +56,40 @@ class Genes():
         celloccu[self.gene] = 0
         #print 'Gene:', self.gene
         celltype = self.cellinpmid
+        #file = open('/home/peeyush/Desktop/gcam_test_data/test_3/b_cell.txt', 'w')
         for found in celltype:
             for index, cells in celloccu.iterrows():
-                if cells['celltype'].strip().lower() in found.lower():
+                if cells['celltype'].lower() in found.lower():
                     celloccu.loc[index, self.gene] += 1
+                    #file.write(cells['celltype'] + '-' + found+'\n')
         celloccu['celltype'] = celloccu['celltype'].str.lower()
+        #file.close()
+        celloccu = subtract_cellnamepeat(celloccu, self.resource_path, self.gene)
         return celloccu
+
+def subtract_cellnamepeat(celloccu, path, gene):
+    '''
+    This will subtract count from ex. t lymphocyte that belongs to cd4 t cells
+    :return:
+    '''
+
+    subtract_df = FilesFolders.read_cell_subtractdf(path)
+    colnames = celloccu.columns
+    #print list(celloccu['celltype'])
+    #print subtract_df
+    #print colnames
+    for k, v in subtract_df.iterrows():
+        for cell in v['subs'].split(','):
+            cell = cell.lower()
+            #print v['celltype'], celloccu['celltype'][celloccu['celltype']==v['celltype']].index[0]
+            #print cell, celloccu['celltype'][celloccu['celltype']==cell].index[0]
+            cell_ind = celloccu['celltype'][celloccu['celltype']==cell].index[0]
+            index = celloccu['celltype'][celloccu['celltype']==v['celltype']].index[0]
+            #if celloccu.loc[index, gene] > 0:
+            celloccu.loc[index, gene] = celloccu.loc[index, gene] - celloccu.loc[cell_ind, gene]
+    #print celloccu
+    return celloccu
+
 
 def pmid_binary_search(annoDB, pmid, imin, imax):
     '''

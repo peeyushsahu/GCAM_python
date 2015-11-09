@@ -74,10 +74,10 @@ def add_genebased_parser(parser):
     group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
                              help="additional search term with gene name to select specific abstracts")
     group_input.add_argument("-s", "--synonym", type=bool, default=False, dest="synonym", choices=[True, False],
-                             help="If you want to consider synonyms for query genes, default=False (False or True)")
+                             help="If you want to consider synonyms for query genes, default=False")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
-                             help="Only if synonym is True. Choose organism from human or mouse, default=human")
-    group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", required=False,
+                             help="Only if synonym is True. Choose organism from human or mouse")
+    group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", choices=[True, False],
                              help="This will calculate the enrichment of data for the selected key cell-types.")
 
 
@@ -93,18 +93,18 @@ def add_expressionbased_parser(parser):
 
     group_input.add_argument("-o", "--outdir", dest="outdir", type=str, required=True,
                              help = "If specified all output files will be written to that directory. Default: the current working directory")
-    group_input.add_argument("-p", "--path", type=str, dest="path", required=True,
-                             help="file path to gene names")
     group_input.add_argument("-e", "--exppath", type=str, dest="exppath", required=True,
                              help="file path to expression data")
+    group_input.add_argument("-p", "--phenopath", type=str, dest="phenopath", required=True,
+                             help="file path to pheno data")
     group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
                              help="additional search term with gene name to select specific abstracts")
     group_input.add_argument("-s", "--synonym", type=bool, default=False, dest="synonym", choices=[True, False],
-                             help="If you want to consider synonyms for query genes, default=False (False or True)")
+                             help="If you want to consider synonyms for query genes, default=False")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
-                             help="Only if synonym is True. Choose organism from human or mouse, default=human")
-    group_input.add_argument("-k", "--keycelltype", type=bool, default=True, dest="key_celltype_list", required=False,
-                             help="To only analysis data for key celltypes.")
+                             help="Only if synonym is True. Choose organism from human or mouse")
+    group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", choices=[True, False],
+                             help="Compute enrichment for key celltypes.")
 
 if __name__ == '__main__':
     try:
