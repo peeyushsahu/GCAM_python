@@ -105,6 +105,18 @@ def add_expressionbased_parser(parser):
                              help="Only if synonym is True. Choose organism from human or mouse")
     group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", choices=[True, False],
                              help="Compute enrichment for key celltypes.")
+    group_input.add_argument("-g", "--gridsize", type=int, default=10, dest="som_gridsize",
+                             help="Define grid size for SOM clustering, default 10.")
+    group_input.add_argument("-f", "--foldifference", type=float, default=4.0, dest="som_foldifference",
+                             help="Define fold difference between samples cluster after SOM to select genes for celltype enrichment analyis.")
+    group_input.add_argument("-C", "--controlSample", type=str, required=True, dest="controlsample",
+                             help="Set control sample for relative celltype fraction analysis.")
+    group_input.add_argument("-c", "--clustrsizeSigcelltype", type=int, default=15, dest="celltypeClusterSize",
+                             help="Lowest number of genes associated for celltype fraction analysis.")
+    group_input.add_argument("-n", "--numiteration", type=int, default=100, dest="somiter",
+                             help="Number of iteration performed for SOM clustering.")
+
+
 
 if __name__ == '__main__':
     try:

@@ -127,7 +127,7 @@ def joincellsynonym(celloccu, resource_path):
     cellSyn = FilesFolders.cell_synonym(resource_path)
     colname = celloccu.columns.values.tolist()
     indexRem = []
-    print celloccu
+    #print celloccu
     for k, v in cellSyn.iterrows():
         index = celloccu.celltype[celloccu.celltype == v['cell'].lower()].index.tolist()[0]
         for cell in v['synonyms'].split(','):
@@ -139,5 +139,5 @@ def joincellsynonym(celloccu, resource_path):
                 if col != 'celltype' and col != 'Unnamed: 0':
                     celloccu.loc[index, col] = celloccu.loc[index, col] + celloccu.loc[indexsyn, col]
     celloccu = celloccu.drop(celloccu.index[indexRem])
-    print celloccu
+    #print celloccu
     return celloccu

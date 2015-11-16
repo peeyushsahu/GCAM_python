@@ -133,7 +133,7 @@ def scale(val, src, dst):
     '''
     This returns scaled value
     :param val: value to be scaled
-    :param src: max and min of values to be scaled
+    :param src: min and max of values to be scaled
     :param dst: range to scale
     :return:
     '''

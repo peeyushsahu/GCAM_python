@@ -6,40 +6,39 @@ from matplotlib import pyplot as plt
 #pd.__version__
 import sys, os
 import sompy as SOM
+import SignificanceTesting as scale
 
-def SOMclustering(Data, pheno_data, path):
+def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridSize=10):
     #Data = pd.read_csv('/home/peeyush/Downloads/GSE72502_PBMC_RPKMs_1.csv', sep=',', header=0, index_col=0)
     #pheno_data = pd.read_csv('/home/peeyush/Downloads/phenotype.csv', sep=',', header=0)
     #path = '/home/peeyush/Downloads'
     newDataDF = pd.DataFrame()
     pheno_groups = pheno_data.groupby('phenotype')
-    print pheno_data
+    #print pheno_data
     for pheno, sam in pheno_groups:
         newDataDF[pheno] = Data[list(sam['sample'].map(str.strip))].mean(axis=1)
     newDataDF['Symbol'] = newDataDF.index.str.lower()
     newDataDF.index = range(0, len(newDataDF))
     newDataDF.to_csv(os.path.join(path, 'joinedexpr.csv'), sep='\t')
     Data = newDataDF.drop(['Symbol'], axis=1)
-
     ## The critical factor which increases the computational time, but mostly the memory problem is the size of SOM (i.e. msz0,msz1),
     ## other wise the training data will be parallelized
     ## This is your selected map size
-    msz0 = 10
-    msz1 = 10
+    msz0 = gridSize
+    msz1 = gridSize
     #This is a random data set, but in general it is assumed that you have your own data set as a numpy ndarray
     #Data = np.random.rand(10*1000,20)
     Data = np.array(Data)
-
     #Put this if you are updating the sompy codes otherwise simply remove it
     #reload(sys.modules['sompy'])
     sm = SOM.SOM('sm', Data, mapsize=[msz0, msz1], norm_method='var', initmethod='pca')
-    sm.train(n_job=1, shared_memory='no', verbose='final', trainlen=1000)
+    sm.train(n_job=1, shared_memory='no', verbose='final', trainlen=iteration)
     sm.view_map(text_size=9, save='Yes', save_dir=os.path.join(path, '2d_plot.png'))
-    sm.hit_map(path)
-    labels = sm.cluster(method='Kmeans', n_clusters=9)
+    #sm.hit_map(path)
+    #labels = sm.cluster(method='Kmeans', n_clusters=9)
     #cents = sm.hit_map_cluster_number(path)
     cents = sm.hit_map_cluster_number(path, Data)
-    print cents[:10]
+    #print cents[:10]
     '''
     clustering = labels[cents[:,2]]
     nof_cluster = set(clustering)
@@ -56,17 +55,17 @@ def SOMclustering(Data, pheno_data, path):
     for ind in range(0, len(neurons)):
         df_dict[neurons[ind]] = df_dict[neurons[ind]].append(newDataDF.iloc[ind], ignore_index=True)
 
-    return cluster_choose(df_dict, path), newDataDF
+    return cluster_choose(df_dict, path, foldDifference=foldDifference), newDataDF
 
 
-def cluster_choose(df_dict, path):
+def cluster_choose(df_dict, path, foldDifference=1.9):
     clusterplot(df_dict, path)
     gene_names = []
     for df in df_dict.values():
         fpkms = []
         for a in df.mean(axis=0):
             fpkms.append(a)
-        if max(fpkms)/min(fpkms) > 6:
+        if max(fpkms)/min(fpkms) > foldDifference:
             #print max(fpkms), min(fpkms)
             for name in df['Symbol']:
                 if not str(name).lower() == 'nan':
@@ -79,6 +78,12 @@ def cluster_choose(df_dict, path):
 
 
 def clusterplot(df_dict, path):
+    '''
+    Plots all the cluster of self organizing map.
+    :param df_dict:
+    :param path:
+    :return:
+    '''
     import matplotlib.pyplot as plt
     fig, axes = plt.subplots(nrows=10, ncols=10)
     fig.set_size_inches(18.5, 10.5)
@@ -98,7 +103,7 @@ def clusterplot(df_dict, path):
     fig.clf()
 
 
-def exprdf4plot(significanceDF, exprdata, phenodata, path = None, control=None):
+def exprdf4plot(significanceDF, exprdata, phenodata, path=None, control=None, clusterSize=20):
     '''
     This methods creates a dictionary of celltypes and enriched gene expression dataframes. This dataframe is further
      analysed for the regression cofficient.
@@ -108,7 +113,7 @@ def exprdf4plot(significanceDF, exprdata, phenodata, path = None, control=None):
     expr = {}
     gene2cell_group = significanceDF.cellgenedf.groupby('CellType')
     for k, v in significanceDF.sigCelltypedf.iterrows():
-        if v['P-val'] <= 0.001:
+        if v['P-val'] <= 0.001 and v['genecluster'] > clusterSize:
             cellexpr_dict = {}
             df = gene2cell_group.get_group(v['celltype'])
             for i in pheno:
@@ -119,11 +124,25 @@ def exprdf4plot(significanceDF, exprdata, phenodata, path = None, control=None):
                 cellexpr_dict[i] = geneexpr_dict
             expr[v['celltype']] = pd.DataFrame(cellexpr_dict)
     #print expr
-    return coffi4exprdf(expr, significanceDF, path, control)
+    if len(expr) == 0:
+        raise ValueError("No significant gene for fraction comparison.")
+
+    scaleSig = significanceDF.sigCelltypedf[(significanceDF.sigCelltypedf['P-val'] <= 0.001) & (significanceDF.sigCelltypedf['genecluster'] > clusterSize)]
+    scaleSig_range = (min(scaleSig['genecluster']), max(scaleSig['genecluster']))
+    for k,v in scaleSig.iterrows():
+        scaleSig.loc[k, 'genecluster_scale'] = scale.scale(v['genecluster'], scaleSig_range, (1, 10))
+    scaleSig.index = scaleSig['celltype']
+    print scaleSig
+    return coffi4exprdf(expr, significanceDF, path, scaleSig, control = control)
 
 
-def coffi4exprdf(expr, significanceDF, path, control=None):
+def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuSVR'):
+    '''
+    Calculate cofficient and prepare dataframe for ploting.
+    '''
     import statsmodels.formula.api as smf
+    from sklearn.svm import NuSVR
+
     sigCelltypedf = significanceDF.sigCelltypedf
     sigCelltypedf.index = sigCelltypedf['celltype']
     plotDataframe = pd.DataFrame(index=expr.keys())
@@ -136,29 +155,62 @@ def coffi4exprdf(expr, significanceDF, path, control=None):
             if not cont == control:
                 con.append(cont)
         break
-    '''
-    formula = control + ' ~ ' + '+'.join(con)
-    #print formula
     for cell in expr.keys():
-        #print expr.get(cell)
-        lm = smf.ols(formula=formula, data=expr.get(cell)).fit()
-        print lm.params
-        for samp, coff in lm.params.iteritems():
-            if coff < 0: coff = 0
-            if not samp == 'Intercept': plotDataframe.loc[cell, samp] = coff
-    '''
-    for cell in expr.keys():
-        for condition in con:
-            formula = control + ' ~ ' + condition
+        plotDataframe.loc[cell, control] = 1*scaleSig.loc[cell,'genecluster_scale']
+    if method == 'one2all':
+        print 'Using Multivariate regression.....'
+        formula = control + ' ~ ' + ' + '.join(con)
+        #print formula
+        for cell in expr.keys():
+            #print expr.get(cell)
+            print formula
             lm = smf.ols(formula=formula, data=expr.get(cell)).fit()
-            plotDataframe.loc[cell, condition] = lm.params[condition]
-    # plotDataframe.T
+            #print lm.params
+            for samp, coff in lm.params.iteritems():
+                print cell, samp, coff, scaleSig.loc[cell,'genecluster_scale']
+                if coff < 0: coff = 0
+                if not samp == 'Intercept':
+                    plotDataframe.loc[cell, samp] = coff * scaleSig.loc[cell,'genecluster_scale']
+
+    if method == 'one2one':
+        print 'Using Univeriate regression.....'
+        for cell in expr.keys():
+            for condition in con:
+                formula = control + ' ~ ' + condition
+                print formula
+                lm = smf.ols(formula=formula, data=expr.get(cell)).fit()
+                coffi = lm.params[condition]
+                if lm.params[condition] < 0: coffi = 0
+                plotDataframe.loc[cell, condition] = coffi * scaleSig.loc[cell,'genecluster_scale']   # plotDataframe.T
+
+    if method == 'nuSVR':
+        print 'Using nu-Support Vector Regression.....'
+        #formula = ', '.join(con)
+        print control, con
+        for cell in expr.keys():
+            data = expr.get(cell)
+            target = data[control]
+            trainingdf = data[con]
+            clf = NuSVR(C=1.0, kernel='linear', nu=0.25)
+            svf = clf.fit(trainingdf,target)
+            coffi = svf.coef_
+            rSqrd = clf.score(trainingdf,target)
+            #print 'Fit: ', coffi, 'rSqrd', rSqrd
+            for sample in con:
+                coffInd = con.index(sample)
+                coff = coffi[0][coffInd]
+                #print cell, sample, coff, scaleSig.loc[cell,'genecluster_scale']
+                if coff < 0: coff = 0
+                plotDataframe.loc[cell, sample] = coff * scaleSig.loc[cell,'genecluster_scale']
+    print plotDataframe
     if not path is None:
         plotDataframe.to_csv(os.path.join(path,'GCAM_cellexpr_sig.txt'), sep='\t')
     return plotDataframe
 
 
 def plot_expressionvseignificance(path, plotdf):
+    import matplotlib
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import numpy as np
     import math

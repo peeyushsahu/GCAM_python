@@ -49,6 +49,7 @@ def celltype_DB(path):
         raise ValueError("celltype db does not exist.")
     cellDB.columns = ['celltype']
     cellDB['celltype'] = cellDB['celltype'].str.lower()
+    print cellDB
     return cellDB
 
 
@@ -138,6 +139,7 @@ def read_expression_file(path):
         #print ('exprs path:'+ path)
         expressiondf = read_csv(path, header=0, sep="\t", index_col=0)
         expressiondf.index = expressiondf.index.str.lower()
+        expressiondf = expressiondf[expressiondf.index.str.len() >= 3] ##Removing gene names with only 2 letters.
     except IOError:
         print ("Error: Expression File does not appear to exist.")
         sys.exit(0)

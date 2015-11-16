@@ -32,7 +32,9 @@ def get_occurrence(genes_dict, cellDB):
         celltype = v.cellinpmid
         for found in celltype:
             for index, cells in celloccu.iterrows():
-                if cells['celltype'].strip().lower() in found.lower():
+                if cells['celltype'] in found.lower(): #if cells['celltype'].strip().lower() in found.lower():
+                    if cells['celltype'] == ' b cell':
+                        print found.lower()
                     celloccu.loc[index, k] += 1
     celloccu['celltype'] = celloccu['celltype'].str.lower()
     return celloccu

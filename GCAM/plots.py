@@ -266,12 +266,17 @@ def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
                 d_labels.insert(0, col)
                 d_widths.insert(0, 0.5)
     else:
-        cell_type = ['Epithelial cell', 'Langerhans cell', 'megacaryocyte', 'macrophage', 'Alverolar macrophage',
-                    'monocyte', 'osteoclast', 'dendritic cell', 'microglia', 'granulocyte', 'neutrophil', 'mast cell',
-                    'Natural killer cell', 'Kupffer cell', 'Plasma cell', 'eosinophil', 'neutrophil',
-                    'naive B cell', 'memory B cell', 'B lymphocyte', 'T lymphocyte', 'naive T cell',
-                    'memory T cell', 'CD8 T cell', 'CD4 T cell', 'regulatory T cell','Cytotoxic T cell',
-                    'helper T cell','m1 macrophage','m2 macrophage']
+        cell_type = ['Epithelial cell', 'Langerhans cell', 'megacaryocyte', 'macrophage', 'Alveolar macrophage',
+                     'm1 macrophage','m2 macrophage', 'monocyte', 'osteoclast', 'dendritic cell', 'microglia',
+                     'granulocyte', 'neutrophil', 'mast cell', 'Natural killer cell', 'Kupffer cell', 'Plasma cell',
+                     'eosinophil', 'naive B cell', 'memory B cell', 'B lymphocyte', 'T lymphocyte',
+                     'naive T cell', 'memory T cell', 'CD8 T cell', 'CD4 T cell', 'regulatory T cell','Cytotoxic T cell',
+                    'helper T cell']
+        d_colors = ['#9afe2e', '#6bb120', '#4d7f17', '#009688', '#35a79c', '#54b2a9', '#83d0c9', '#ffdaaf',
+                    '#d4a87c', '#ff9237', '#eb5300', '#000000', '#8d8282', '#bbbbbb', '#f5f8ee', '#feffc3',
+                    '#fcff83', '#f9e909', '#fe2e2e', '#cb2424', '#b62020', '#e18f8f', '#fcbbbb',
+                    '#efbbff','#d896ff', '#be29ec','#800080', '#660066', '#470047']
+
         cells = [1.0]*len(cell_type)
         number_label = float(len(cell_type))
         adjustment = 0.02
@@ -302,8 +307,8 @@ def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
     #print stackplot_data
     #print d_labels
     stplot = np.array(stackplot_data) #[genes, cells] stackplot list of list
-    gap = 0.02
-    fig = plt.figure()
+    gap = 0.01
+    fig = plt.figure(figsize=(11,8))
     ax6 = fig.add_subplot(111)
     stackedBarPlot(ax6,
                     stplot,
@@ -319,9 +324,10 @@ def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
                     widths=d_widths
                     )
     plt.title("Relative abundance of celltype")
+    plt.setp(ax6.xaxis.get_majorticklabels(), rotation=45)
     #fig.subplots_adjust(bottom=0.4)
     plt.tight_layout()
-    plt.savefig(os.path.join(path, 'GCAM_'+method+'_stacks.png'))
+    plt.savefig(os.path.join(path, 'GCAM_'+method+'_stacks.tiff'))
     plt.clf()
     #return
 
@@ -449,17 +455,17 @@ def stackedBarPlot(ax,                                 # axes to plot onto
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
-    ax.spines["left"].set_visible(False)
+    #ax.spines["left"].set_visible(False)
 
     # make ticks if necessary
     if yTicks is not "none":
         ax.tick_params(axis='y', which='both', labelsize=8, direction="out")
         ax.yaxis.tick_left()
-        plt.yticks(yTicks[0], yTicks[1])
+        plt.yticks(yTicks[0], ['0%','20%','40%','60%','80%','100%'])
 
         # second y-axis for cell_type annotation
         ax2 = ax.twinx()
-        ax2.tick_params(axis='y', which='both', labelsize=8, direction='out')
+        ax2.tick_params(axis='y', which='both', labelsize=10, direction='in')
         ax2.yaxis.tick_right()
         plt.yticks(np.arange(no_label)/(no_label)+adjustment, cell_type)
     else:
@@ -468,7 +474,7 @@ def stackedBarPlot(ax,                                 # axes to plot onto
     if xLabels is not None:
         ax.tick_params(axis='x', which='both', labelsize=8, direction="out")
         ax.xaxis.tick_bottom()
-        plt.xticks(x, xLabels, rotation=45)
+        plt.xticks(x, xLabels)
     else:
         plt.xticks([], [])
 

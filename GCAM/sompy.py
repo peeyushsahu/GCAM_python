@@ -530,11 +530,11 @@ class SOM(object):
             for i, txt in enumerate(label):
                 ax.annotate(txt, (cents[i,1],cents[i,0]),size=10, va="center")
 
-        plt.imshow(codebook.reshape(msz[0],msz[1])[::],alpha=.5)
+        #plt.imshow(codebook.reshape(msz[0],msz[1])[::],alpha=.5)
         #     	plt.pcolor(codebook.reshape(msz[0],msz[1])[::-1],alpha=.5,cmap='jet')
-        plt.tight_layout()
-        plt.savefig(os.path.join(path, 'GCAM_hitmap_clusterno.png'))
-        plt.clf()
+        #plt.tight_layout()
+        #plt.savefig(os.path.join(path, 'GCAM_hitmap_clusterno.png'))
+        #plt.clf()
         return cents
 
     def view_map_dot(self,which_dim='all',colormap=None,cols=None,save='No',save_dir='',text_size=8):
@@ -1142,10 +1142,10 @@ def view_2d_Pack(self, text_size,which_dim='all', what = 'codebook',save='No', g
 
     if save == 'Yes':
             if save_dir != 'empty':
-                print save_dir
+                #print save_dir
                 fig.savefig(save_dir,bbox_inches='tight', transparent=False, dpi=200)
             else:
-                print save_dir
+                #print save_dir
                 add = '/home/peeyush/Downloads/SOM.png'
                 fig.savefig(add,bbox_inches='tight', transparent=False, dpi=200)
             plt.close(fig)

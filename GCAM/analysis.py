@@ -23,15 +23,16 @@ def gcam_analysis(args, resource_path):
     if subcommand == 'exprbased':
         expressiondf = FilesFolders.read_expression_file(args.exppath)
         pheno_data = FilesFolders.read_pheno_data(args.phenopath)
-    print 'Keycelltype', args.key_celltype_list, args.outdir, args.synonym
+    #print 'Keycelltype', args.key_celltype_list, args.outdir, args.synonym
     if subcommand == 'genebased':
         genenames = FilesFolders.get_genes(args.path)
         gene_based(args, resource_path, genenames, outdir)
     if subcommand == 'exprbased':
-        genenames, newexprdf = expr_based(outdir, expressiondf, pheno_data)
+        genenames, newexprdf = expr_based(outdir, expressiondf, pheno_data, args)
         #print 'genes', genenames
         significance_Df = gene_based(args, resource_path, genenames, outdir)
-        plotdf = ExpressionClustering.exprdf4plot(significance_Df, newexprdf, pheno_data, control='WT_LIV_Abdulah', path=outdir)
+        plotdf = ExpressionClustering.exprdf4plot(significance_Df, newexprdf, pheno_data,
+                                                  control=args.controlsample, path=outdir, clusterSize=int(args.celltypeClusterSize)) #'WT_LIV_Abdulah'
         plots.stack_barplot(plotdf, outdir, key_celltypes=args.key_celltype_list, method=subcommand)
     tstop = timeit.default_timer()
     print ('Total time elapsed: ' + str(tstop - tstart) + ' sec')
@@ -72,9 +73,9 @@ def gene_based(args, resource_path, genenames, outdir):
     return significanceDF
 
 
-def expr_based(outdir, expressiondf, pheno_data):
+def expr_based(outdir, expressiondf, pheno_data, args):
     # Expression analysis of celltype
-    return ExpressionClustering.SOMclustering(expressiondf, pheno_data, outdir)
+    return ExpressionClustering.SOMclustering(expressiondf, pheno_data, outdir, float(args.som_foldifference), iteration=int(args.somiter))
 
 def write_result(significanceDF, outdir, key_celltypes):
     '''
