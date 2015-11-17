@@ -49,7 +49,7 @@ def celltype_DB(path):
         raise ValueError("celltype db does not exist.")
     cellDB.columns = ['celltype']
     cellDB['celltype'] = cellDB['celltype'].str.lower()
-    print cellDB
+    #print cellDB
     return cellDB
 
 

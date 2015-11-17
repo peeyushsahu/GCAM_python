@@ -225,7 +225,7 @@ class HiearchicalHeatmap():
 
 
 def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
-    print 'Key_celltypes', key_celltypes
+    #print 'Key_celltypes', key_celltypes
     d_labels = ["celltype"]
     d_widths = [0.1]
     stackplot_data = []
@@ -237,12 +237,12 @@ def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
         if len(sigcelltype) > 15: sigcelltype = sigcelltype[:15]
         cells = [1.0]*len(sigcelltype)
         number_label = float(len(sigcelltype))
-        adjustment = 0.03
+        adjustment = 0.02
         plot_color = d_colors[:len(cells)]
         #print sigcelltype
-        genes = [0.0]*len(cells)
-        stackplot_data.append(cells)
         if method == 'genebased':
+            genes = [0.0]*len(cells)
+            stackplot_data.append(cells)
             sigcelltype = sigcelltype.sort(['P-val'], ascending=True)
             sigcelltype.index = range(0, len(sigcelltype))
             cell_type = sigcelltype['celltype']
@@ -252,28 +252,30 @@ def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
             d_labels.insert(0, 'sample')
             d_widths.insert(0, 0.5)
         if method == 'exprbased':
-            sigcelltype['celltype'] = sigcelltype.index
-            sigcelltype = sigcelltype.sort(['P-val'], ascending=True)
-            sigcelltype.index = range(0, len(sigcelltype))
-            cell_type = sigcelltype['celltype']
-            cols = [col for col in sigcelltype.columns if 'FC' in col]
-            print cols
-            for col in cols:
+            cell_type = list(sigcelltype.index)
+            #print sigcelltype
+            stackplot_data.append(cells)
+            #cols = [col for col in sigcelltype.columns if 'FC' in col]
+            #print sigcelltype.columns
+            for col in sigcelltype.columns:
                 genes = [0.0]*len(cells)
-                for ind, row in sigcelltype.iterrows():
-                    genes[ind] = float(row[col])
+                for i, r in sigcelltype.iterrows():
+                    #print i
+                    ind = cell_type.index(i)
+                    genes[ind] = float(r[col])
                 stackplot_data.insert(0, genes)
                 d_labels.insert(0, col)
                 d_widths.insert(0, 0.5)
+            #print stackplot_data
     else:
         cell_type = ['Epithelial cell', 'Langerhans cell', 'megacaryocyte', 'macrophage', 'Alveolar macrophage',
-                     'm1 macrophage','m2 macrophage', 'monocyte', 'osteoclast', 'dendritic cell', 'microglia',
+                     'm1 macrophage','m2 macrophage', 'monocyte', 'dendritic cell', 'microglia',
                      'granulocyte', 'neutrophil', 'mast cell', 'Natural killer cell', 'Kupffer cell', 'Plasma cell',
                      'eosinophil', 'naive B cell', 'memory B cell', 'B lymphocyte', 'T lymphocyte',
                      'naive T cell', 'memory T cell', 'CD8 T cell', 'CD4 T cell', 'regulatory T cell','Cytotoxic T cell',
                     'helper T cell']
         d_colors = ['#9afe2e', '#6bb120', '#4d7f17', '#009688', '#35a79c', '#54b2a9', '#83d0c9', '#ffdaaf',
-                    '#d4a87c', '#ff9237', '#eb5300', '#000000', '#8d8282', '#bbbbbb', '#f5f8ee', '#feffc3',
+                    '#ff9237', '#eb5300', '#000000', '#8d8282', '#bbbbbb', '#f5f8ee', '#feffc3',
                     '#fcff83', '#f9e909', '#fe2e2e', '#cb2424', '#b62020', '#e18f8f', '#fcbbbb',
                     '#efbbff','#d896ff', '#be29ec','#800080', '#660066', '#470047']
 
@@ -504,7 +506,7 @@ def plot_celltypesignificance(path, plotdf):
     name = plotdf['celltype'].tolist()
     area = [(math.log(x, 10) * -15) for x in t]
     color = np.random.random(len(t))
-    print area
+    #print area
     plt.scatter(s, l, s=area, c=color, alpha=0.5)
     plt.grid(True, linestyle=':', color='black')
 

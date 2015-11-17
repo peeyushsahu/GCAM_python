@@ -9,9 +9,7 @@ import sompy as SOM
 import SignificanceTesting as scale
 
 def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridSize=10):
-    #Data = pd.read_csv('/home/peeyush/Downloads/GSE72502_PBMC_RPKMs_1.csv', sep=',', header=0, index_col=0)
-    #pheno_data = pd.read_csv('/home/peeyush/Downloads/phenotype.csv', sep=',', header=0)
-    #path = '/home/peeyush/Downloads'
+    print ('Running SOM clustering')
     newDataDF = pd.DataFrame()
     pheno_groups = pheno_data.groupby('phenotype')
     #print pheno_data
@@ -51,7 +49,7 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
     #print 'Data points', len(neurons)
     nof_nuron_cluster = set(neurons)
     df_dict = {i:pd.DataFrame() for i in nof_nuron_cluster}
-    print 'Number of neurons occupied', len(df_dict)
+    #print 'Number of neurons occupied', len(df_dict)
     for ind in range(0, len(neurons)):
         df_dict[neurons[ind]] = df_dict[neurons[ind]].append(newDataDF.iloc[ind], ignore_index=True)
 
@@ -132,7 +130,7 @@ def exprdf4plot(significanceDF, exprdata, phenodata, path=None, control=None, cl
     for k,v in scaleSig.iterrows():
         scaleSig.loc[k, 'genecluster_scale'] = scale.scale(v['genecluster'], scaleSig_range, (1, 10))
     scaleSig.index = scaleSig['celltype']
-    print scaleSig
+    #print (scaleSig)
     return coffi4exprdf(expr, significanceDF, path, scaleSig, control = control)
 
 
@@ -144,6 +142,7 @@ def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuS
     from sklearn.svm import NuSVR
 
     sigCelltypedf = significanceDF.sigCelltypedf
+    sigCelltypedf = sigCelltypedf.sort(['P-val'], ascending=True)
     sigCelltypedf.index = sigCelltypedf['celltype']
     plotDataframe = pd.DataFrame(index=expr.keys())
     expr.keys()
@@ -163,11 +162,11 @@ def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuS
         #print formula
         for cell in expr.keys():
             #print expr.get(cell)
-            print formula
+            #print formula
             lm = smf.ols(formula=formula, data=expr.get(cell)).fit()
             #print lm.params
             for samp, coff in lm.params.iteritems():
-                print cell, samp, coff, scaleSig.loc[cell,'genecluster_scale']
+                #print cell, samp, coff, scaleSig.loc[cell,'genecluster_scale']
                 if coff < 0: coff = 0
                 if not samp == 'Intercept':
                     plotDataframe.loc[cell, samp] = coff * scaleSig.loc[cell,'genecluster_scale']
@@ -177,7 +176,7 @@ def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuS
         for cell in expr.keys():
             for condition in con:
                 formula = control + ' ~ ' + condition
-                print formula
+                #print formula
                 lm = smf.ols(formula=formula, data=expr.get(cell)).fit()
                 coffi = lm.params[condition]
                 if lm.params[condition] < 0: coffi = 0
@@ -186,7 +185,7 @@ def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuS
     if method == 'nuSVR':
         print 'Using nu-Support Vector Regression.....'
         #formula = ', '.join(con)
-        print control, con
+        #print control, con
         for cell in expr.keys():
             data = expr.get(cell)
             target = data[control]
@@ -202,7 +201,7 @@ def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuS
                 #print cell, sample, coff, scaleSig.loc[cell,'genecluster_scale']
                 if coff < 0: coff = 0
                 plotDataframe.loc[cell, sample] = coff * scaleSig.loc[cell,'genecluster_scale']
-    print plotDataframe
+    #print plotDataframe
     if not path is None:
         plotDataframe.to_csv(os.path.join(path,'GCAM_cellexpr_sig.txt'), sep='\t')
     return plotDataframe
