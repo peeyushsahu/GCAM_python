@@ -326,7 +326,7 @@ def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
                     widths=d_widths
                     )
     plt.title("Relative abundance of celltype")
-    plt.setp(ax6.xaxis.get_majorticklabels(), rotation=45)
+    plt.setp(ax6.xaxis.get_majorticklabels(), rotation=90)
     #fig.subplots_adjust(bottom=0.4)
     plt.tight_layout()
     plt.savefig(os.path.join(path, 'GCAM_'+method+'_stacks.tiff'))

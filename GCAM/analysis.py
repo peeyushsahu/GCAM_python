@@ -31,7 +31,7 @@ def gcam_analysis(args, resource_path):
         genenames, newexprdf = expr_based(outdir, expressiondf, pheno_data, args)
         #print 'genes', genenames
         significance_Df = gene_based(args, resource_path, genenames, outdir)
-        plotdf = ExpressionClustering.exprdf4plot(significance_Df, newexprdf, pheno_data,
+        plotdf = ExpressionClustering.exprdf4plot(significance_Df, newexprdf, pheno_data, args.regMethod,
                                                   control=args.controlsample, path=outdir, clusterSize=int(args.celltypeClusterSize)) #'WT_LIV_Abdulah'
         plots.stack_barplot(plotdf, outdir, key_celltypes=args.key_celltype_list, method=subcommand)
     tstop = timeit.default_timer()

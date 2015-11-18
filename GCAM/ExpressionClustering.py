@@ -1,9 +1,6 @@
 __author__ = 'peeyush'
 import pandas as pd
-import time as time
 import numpy as np
-from matplotlib import pyplot as plt
-#pd.__version__
 import sys, os
 import sompy as SOM
 import SignificanceTesting as scale
@@ -15,18 +12,18 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
     #print pheno_data
     for pheno, sam in pheno_groups:
         newDataDF[pheno] = Data[list(sam['sample'].map(str.strip))].mean(axis=1)
+    print 'Size of dataframe before filtering:', newDataDF.shape
+    newDataDF = newDataDF[newDataDF.sum(axis=1) > 10]
+    print 'Size of dataframe after filtering:', newDataDF.shape
     newDataDF['Symbol'] = newDataDF.index.str.lower()
     newDataDF.index = range(0, len(newDataDF))
     newDataDF.to_csv(os.path.join(path, 'joinedexpr.csv'), sep='\t')
     Data = newDataDF.drop(['Symbol'], axis=1)
-    ## The critical factor which increases the computational time, but mostly the memory problem is the size of SOM (i.e. msz0,msz1),
-    ## other wise the training data will be parallelized
-    ## This is your selected map size
+    Data = np.array(Data) ##np.log2(Data)
+
+    ## Grid size in rows and columns
     msz0 = gridSize
     msz1 = gridSize
-    #This is a random data set, but in general it is assumed that you have your own data set as a numpy ndarray
-    #Data = np.random.rand(10*1000,20)
-    Data = np.array(Data)
     #Put this if you are updating the sompy codes otherwise simply remove it
     #reload(sys.modules['sompy'])
     sm = SOM.SOM('sm', Data, mapsize=[msz0, msz1], norm_method='var', initmethod='pca')
@@ -101,7 +98,7 @@ def clusterplot(df_dict, path):
     fig.clf()
 
 
-def exprdf4plot(significanceDF, exprdata, phenodata, path=None, control=None, clusterSize=20):
+def exprdf4plot(significanceDF, exprdata, phenodata, method, path=None, control=None, clusterSize=20):
     '''
     This methods creates a dictionary of celltypes and enriched gene expression dataframes. This dataframe is further
      analysed for the regression cofficient.
@@ -131,7 +128,7 @@ def exprdf4plot(significanceDF, exprdata, phenodata, path=None, control=None, cl
         scaleSig.loc[k, 'genecluster_scale'] = scale.scale(v['genecluster'], scaleSig_range, (1, 10))
     scaleSig.index = scaleSig['celltype']
     #print (scaleSig)
-    return coffi4exprdf(expr, significanceDF, path, scaleSig, control = control)
+    return coffi4exprdf(expr, significanceDF, path, scaleSig, control=control, method = method)
 
 
 def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuSVR'):
@@ -156,6 +153,7 @@ def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuS
         break
     for cell in expr.keys():
         plotDataframe.loc[cell, control] = 1*scaleSig.loc[cell,'genecluster_scale']
+
     if method == 'one2all':
         print 'Using Multivariate regression.....'
         formula = control + ' ~ ' + ' + '.join(con)
@@ -184,16 +182,23 @@ def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuS
 
     if method == 'nuSVR':
         print 'Using nu-Support Vector Regression.....'
-        #formula = ', '.join(con)
-        #print control, con
         for cell in expr.keys():
             data = expr.get(cell)
             target = data[control]
             trainingdf = data[con]
-            clf = NuSVR(C=1.0, kernel='linear', nu=0.25)
-            svf = clf.fit(trainingdf,target)
+            #print trainingdf
+            rsqr=0; nu=0.50
+            for NU in [0.25, 0.50, 0.75]:
+                clf = NuSVR(C=1.0, kernel='linear', nu=NU)
+                clf.fit(trainingdf, target)
+                rSqrd = clf.score(trainingdf,target)
+                if rsqr < rSqrd:
+                    rsqr = rSqrd
+                    nu = NU
+            print ('nu parameter:',nu)
+            clf = NuSVR(C=1.0, kernel='linear', nu=nu)
+            svf = clf.fit(trainingdf, target)
             coffi = svf.coef_
-            rSqrd = clf.score(trainingdf,target)
             #print 'Fit: ', coffi, 'rSqrd', rSqrd
             for sample in con:
                 coffInd = con.index(sample)
