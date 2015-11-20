@@ -502,7 +502,7 @@ class SOM(object):
             codebook = getattr(self, 'cluster_labels')
             #print 'yesyy'
         else:
-            print 'clustering based on default parameters...'
+            print 'clustering expression dataset...'
             codebook = self.cluster()
         msz = getattr(self, 'mapsize')
         fig = plt.figure(figsize=(msz[1]/2.5, msz[0]/2.5))

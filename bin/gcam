@@ -115,7 +115,7 @@ def add_expressionbased_parser(parser):
                              help="Lowest number of genes associated for celltype fraction analysis.")
     group_input.add_argument("-n", "--numiteration", type=int, default=100, dest="somiter",
                              help="Number of iteration performed for SOM clustering.")
-    group_input.add_argument("-R", "--regCoffi", type=str, default='nuSVR', dest="regMethod", choices=['nuSVR', 'one2all', 'one2one'],
+    group_input.add_argument("-R", "--regCoffi", type=str, default='nuSVR', dest="regMethod", choices=['nuSVR', 'one2all', 'one2one', 'nuSVR-one2one'],
                              help="Define the method to find celltype fraction.")
 
 

@@ -23,7 +23,7 @@ def create_folders(path):
         #os.chmod(npath, mode=777)
     return npath
 
-def read_database(path):
+def read_annotation_database(path):
     '''
     Reading annotation DB as pandas dataframe
     :param path:
@@ -159,6 +159,22 @@ def read_previous_occurrence_table(resource_path):
         print ("Warning: Creating Gene occurrence db, analysis will take longer.")
         return None, False
     return gene_occu_db, True
+
+
+def read_previous_gene_pmid_table(resource_path):
+    '''
+    This function will read pmids for pre-analysed gene.
+    :param resource_path:
+    :return:
+    '''
+    try:
+        print ('reading previously analysed genes for pmids')
+        gene_pmid_db = read_csv(os.path.join(resource_path, 'gene_pmid_db.csv'), header=0, sep=",", index_col=0)
+    except:
+        print ("Warning: Creating Gene pmids db, analysis will take longer.")
+        return None, False
+    return gene_pmid_db, True
+
 
 def read_pheno_data(path):
     '''

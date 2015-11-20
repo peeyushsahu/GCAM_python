@@ -9,16 +9,24 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
     print ('Running SOM clustering')
     newDataDF = pd.DataFrame()
     pheno_groups = pheno_data.groupby('phenotype')
-    #print pheno_data
+    print pheno_data
     for pheno, sam in pheno_groups:
         newDataDF[pheno] = Data[list(sam['sample'].map(str.strip))].mean(axis=1)
     print 'Size of dataframe before filtering:', newDataDF.shape
     newDataDF = newDataDF[newDataDF.sum(axis=1) > 10]
-    print 'Size of dataframe after filtering:', newDataDF.shape
-    newDataDF['Symbol'] = newDataDF.index.str.lower()
-    newDataDF.index = range(0, len(newDataDF))
     newDataDF.to_csv(os.path.join(path, 'joinedexpr.csv'), sep='\t')
-    Data = newDataDF.drop(['Symbol'], axis=1)
+    #print newDataDF.head()
+    ## normalizing df
+    normnewDataDF = pd.DataFrame(index=newDataDF.index)
+    newDataDFcolumns = newDataDF.columns
+    for col in newDataDFcolumns:
+        normnewDataDF[col] = (newDataDF[col] - newDataDF[col].mean())/newDataDF[col].std()
+    #print normnewDataDF.head()
+    print 'Size of dataframe after filtering:', newDataDF.shape
+    normnewDataDF['Symbol'] = normnewDataDF.index.str.lower()
+    normnewDataDF.index = range(0, len(normnewDataDF))
+    normnewDataDF.to_csv(os.path.join(path, 'normjoinedexpr.csv'), sep='\t')
+    Data = normnewDataDF.drop(['Symbol'], axis=1)
     Data = np.array(Data) ##np.log2(Data)
 
     ## Grid size in rows and columns
@@ -34,34 +42,35 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
     #cents = sm.hit_map_cluster_number(path)
     cents = sm.hit_map_cluster_number(path, Data)
     #print cents[:10]
-    '''
-    clustering = labels[cents[:,2]]
-    nof_cluster = set(clustering)
-    print ('Number of clusters:',len(nof_cluster))
-    df_dict = {i:pd.DataFrame() for i in nof_cluster}
-    for ind in range(0, len(clustering)):
-        df_dict[clustering[ind]] = df_dict[clustering[ind]].append(newDataDF.iloc[ind], ignore_index=True)
-    '''
     neurons = cents[:,2]
     #print 'Data points', len(neurons)
     nof_nuron_cluster = set(neurons)
     df_dict = {i:pd.DataFrame() for i in nof_nuron_cluster}
     #print 'Number of neurons occupied', len(df_dict)
     for ind in range(0, len(neurons)):
-        df_dict[neurons[ind]] = df_dict[neurons[ind]].append(newDataDF.iloc[ind], ignore_index=True)
+        df_dict[neurons[ind]] = df_dict[neurons[ind]].append(normnewDataDF.iloc[ind], ignore_index=True)
+    geneList = []
+    dfGene = 2001
+    while dfGene > 1500:
+        print 'FoldDifferencec',foldDifference
+        geneList = cluster_choose(df_dict, path, foldDifference=foldDifference)
+        dfGene = len(geneList)
+        with open(os.path.join(path,'parameter.txt'), 'a') as myfile:
+            myfile.write("\nFoldChange: "+str(foldDifference)+"\tDE genes: "+str(dfGene))
+        foldDifference = foldDifference + 1
+        myfile.close()
+    return geneList, normnewDataDF
 
-    return cluster_choose(df_dict, path, foldDifference=foldDifference), newDataDF
 
 
-def cluster_choose(df_dict, path, foldDifference=1.9):
+def cluster_choose(df_dict, path, foldDifference=2):
     clusterplot(df_dict, path)
     gene_names = []
     for df in df_dict.values():
-        fpkms = []
-        for a in df.mean(axis=0):
-            fpkms.append(a)
-        if max(fpkms)/min(fpkms) > foldDifference:
-            #print max(fpkms), min(fpkms)
+        fpkms = df.mean(axis=0)
+        #print max(fpkms)/min(fpkms), max(fpkms), min(fpkms), len(df)
+        if abs(max(fpkms)/min(fpkms)) > foldDifference:
+            #print 'selected', max(fpkms)/min(fpkms), max(fpkms),  min(fpkms), len(df)
             for name in df['Symbol']:
                 if not str(name).lower() == 'nan':
                     #print name
@@ -195,10 +204,11 @@ def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuS
                 if rsqr < rSqrd:
                     rsqr = rSqrd
                     nu = NU
-            print ('nu parameter:',nu)
+            #print ('nu parameter:',nu)
             clf = NuSVR(C=1.0, kernel='linear', nu=nu)
             svf = clf.fit(trainingdf, target)
             coffi = svf.coef_
+            #trainingdf.to_csv(os.path.join(path, cell+'regr_cellexpr.txt'), sep='\t')
             #print 'Fit: ', coffi, 'rSqrd', rSqrd
             for sample in con:
                 coffInd = con.index(sample)
@@ -206,8 +216,36 @@ def coffi4exprdf(expr, significanceDF, path, scaleSig, control=None, method='nuS
                 #print cell, sample, coff, scaleSig.loc[cell,'genecluster_scale']
                 if coff < 0: coff = 0
                 plotDataframe.loc[cell, sample] = coff * scaleSig.loc[cell,'genecluster_scale']
+
+    if method == 'nuSVR-one2one':
+        print 'Using Univeriate nuSVR.....'
+        for cell in expr.keys():
+            data = expr.get(cell)
+            target = data[control]
+            for col in con:
+                trainingdf = data[[col]]
+                rsqr=0; nu=0.50
+                for NU in [0.25, 0.50, 0.75]:
+                    clf = NuSVR(C=1.0, kernel='linear', nu=NU)
+                    clf.fit(trainingdf, target)
+                    rSqrd = clf.score(trainingdf,target)
+                    if rsqr < rSqrd:
+                        rsqr = rSqrd
+                        nu = NU
+                #print ('nu parameter:',nu)
+                clf = NuSVR(C=1.0, kernel='linear', nu=nu)
+                svf = clf.fit(trainingdf, target)
+                coffi = svf.coef_
+                #print type(coffi)
+                #print coffi
+                #trainingdf.to_csv(os.path.join(path, cell+'regr_cellexpr.txt'), sep='\t')
+                #print 'Fit: ', coffi, 'rSqrd', rSqrd
+                if coffi < 0: coffi = 0
+                plotDataframe.loc[cell, col] = coffi #* scaleSig.loc[cell,'genecluster_scale']
     #print plotDataframe
     if not path is None:
+        for column in plotDataframe.columns:
+            plotDataframe[column] = (plotDataframe[column]/sum(plotDataframe[column]))
         plotDataframe.to_csv(os.path.join(path,'GCAM_cellexpr_sig.txt'), sep='\t')
     return plotDataframe
 

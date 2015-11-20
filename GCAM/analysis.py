@@ -20,14 +20,26 @@ def gcam_analysis(args, resource_path):
     ### Reading require databases
     print ('Reading required DBs')
     outdir = FilesFolders.create_folders(args.outdir)
-    if subcommand == 'exprbased':
-        expressiondf = FilesFolders.read_expression_file(args.exppath)
-        pheno_data = FilesFolders.read_pheno_data(args.phenopath)
     #print 'Keycelltype', args.key_celltype_list, args.outdir, args.synonym
+    if subcommand == 'exprbased':
+        parameter = open(os.path.join(outdir,'parameter.txt'), 'w')
+        parameter.write("Analysis type: "+subcommand+"\n")
+        parameter.write("Som grid size: "+str(args.som_gridsize)+"\n")
+        parameter.write("Control sample name: "+args.controlsample+"\n")
+        parameter.write("Minimun no of genes for cell fraction analysis: "+str(args.celltypeClusterSize)+"\n")
+        parameter.write("Regression method used: "+args.regMethod+"\n")
+        parameter.close()
+
     if subcommand == 'genebased':
         genenames = FilesFolders.get_genes(args.path)
         gene_based(args, resource_path, genenames, outdir)
+
     if subcommand == 'exprbased':
+        expressiondf = FilesFolders.read_expression_file(args.exppath)
+        pheno_data = FilesFolders.read_pheno_data(args.phenopath)
+        #print pheno_data['phenotype']
+        if args.controlsample not in list(pheno_data['phenotype']):
+            raise KeyError(args.controlsample+": control sample name not in phenotype list.")
         genenames, newexprdf = expr_based(outdir, expressiondf, pheno_data, args)
         #print 'genes', genenames
         significance_Df = gene_based(args, resource_path, genenames, outdir)

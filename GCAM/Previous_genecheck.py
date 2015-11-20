@@ -63,7 +63,7 @@ def occurrence_df(genenames, resource_path, subquery):
     :param resource_path:
     :return:
     '''
-    annDB = FilesFolders.read_database(resource_path)
+    annDB = FilesFolders.read_annotation_database(resource_path)
     cellDB = FilesFolders.celltype_DB(resource_path)
     check_database_update(annDB, cellDB, resource_path)
     print ('Checking for pre analysed genes....')

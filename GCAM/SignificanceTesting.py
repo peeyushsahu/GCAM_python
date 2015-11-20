@@ -25,6 +25,8 @@ class SignificanceObject():
         occurrencedf = self.occurrencedf
         transposedf = pd.DataFrame.transpose(occurrencedf)
         scaled_df = scale_dataframe(transposedf)
+        #print occurrencedf.index
+        #print scaled_df
         scaled_df.columns = occurrencedf.index
         scaled_df = scaled_df.set_index(occurrencedf.columns)
         self.heatmapdf = scaled_df
@@ -47,7 +49,7 @@ class SignificanceObject():
         '''
         hclustHeatmap = HiearchicalHeatmap()
         hclustHeatmap.frame = self.filheatmapdf
-        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.png'])
+        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.svg'])
         fig, axm, axcb, cb = hclustHeatmap.plot()
 
 

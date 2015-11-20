@@ -329,7 +329,7 @@ def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
     plt.setp(ax6.xaxis.get_majorticklabels(), rotation=90)
     #fig.subplots_adjust(bottom=0.4)
     plt.tight_layout()
-    plt.savefig(os.path.join(path, 'GCAM_'+method+'_stacks.tiff'))
+    plt.savefig(os.path.join(path, 'GCAM_'+method+'_stacks.svg'))
     plt.clf()
     #return
 
@@ -531,5 +531,5 @@ def plot_celltypesignificance(path, plotdf):
     plt.xlabel('Celltypes', fontsize=12)
     plt.ylabel('Gene cluster size', fontsize=12)
     plt.tight_layout()
-    plt.savefig(os.path.join(path, 'GCAM_SigCelltype.png'))
+    plt.savefig(os.path.join(path, 'GCAM_SigCelltype.svg'))
     plt.clf()
