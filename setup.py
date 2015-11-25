@@ -56,6 +56,7 @@ def main():
               'pandas',
               'biopython',
               'scipy',
+              'scikit-learn',
           ],
           )
 

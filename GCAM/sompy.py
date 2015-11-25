@@ -246,15 +246,15 @@ class SOM(object):
 #             print
             ts = round(time() - t0, 3)
             print
-            print "Total time elapsed: %f secodns" %ts
-            print "final quantization error: %f" %err
+            print ("Total time elapsed: %f secodns" %ts)
+            print ("final quantization error: %f" %err)
         if verbose=='final':
 #         or verbose == 'off':
 #             print
             ts = round(time() - t0, 3)
             print
-            print "Total time elapsed: %f secodns" %ts
-            print "final quantization error: %f" %err
+            print ("Total time elapsed: %f secodns" %ts)
+            print ("final quantization error: %f" %err)
 
     #to project a data set to a trained SOM and find the index of bmu
     #It is based on nearest neighborhood search module of scikitlearn, but it is not that fast.
@@ -411,7 +411,6 @@ class SOM(object):
 
             plt.scatter(coord_d[:,1]+.5, msz[0]-.5-coord_d[:,0], s=area, alpha=0.9,c='None',marker='o',cmap='jet',linewidths=3, edgecolor = 'r')
             plt.scatter(coord_d[:,1]+.5, msz[0]-.5-coord_d[:,0], s=area, alpha=0.2,c='b',marker='o',cmap='jet',linewidths=3, edgecolor = 'r')
-            print 'hi'
     #     		plt.scatter(coord[:,1], msz[0]-1-coord[:,0], s=area, alpha=0.2,c='b',marker='o',cmap='jet',linewidths=3, edgecolor = 'r')
     #     		plt.scatter(X, msz[0]-1-Y, s=area, alpha=0.2,c='b',marker='o',cmap='jet',linewidths=3, edgecolor = 'r')#
     #     		plt.scatter(X, msz[0]-1-Y, s=area, alpha=0.9,c='None',marker='o',cmap='jet',linewidths=3, edgecolor = 'r')
@@ -502,7 +501,7 @@ class SOM(object):
             codebook = getattr(self, 'cluster_labels')
             #print 'yesyy'
         else:
-            print 'clustering expression dataset...'
+            print('clustering expression dataset...')
             codebook = self.cluster()
         msz = getattr(self, 'mapsize')
         fig = plt.figure(figsize=(msz[1]/2.5, msz[0]/2.5))
@@ -633,7 +632,7 @@ class SOM(object):
                 fig.savefig(save_dir, transparent=False, dpi=200)
             else:
                 add = '/Users/itadmin/Desktop/SOM_dot.png'
-                print 'save directory: ', add
+                print('save directory: ', add)
                 fig.savefig(add, transparent=False, dpi=200)
 
             plt.close(fig)
@@ -827,7 +826,7 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
     if phase == 'rough':
         #training length
         #trainlen = int(np.ceil(30*mpd))
-        print 'Nos of iteration',trainlen
+        #print('Nos of iteration',trainlen)
         #radius for updating
         if initmethod == 'random':
             radiusin = max(1, np.ceil(ms/3.))
@@ -845,7 +844,7 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
             #trainlen = int(np.ceil(50*mpd))
             radiusin = max(1, ms/12.) #from radius fin in rough training
             radiusfin = max(1, radiusin/25.)
-            print 'Nos of iteration',trainlen
+            print('Nos of iteration',trainlen)
 
 #             radiusin = max(1, ms/2.) #from radius fin in rough training
 #             radiusfin = max(1, radiusin/2.)
@@ -853,7 +852,7 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
             #trainlen = int(np.ceil(40*mpd))
             radiusin = max(1, np.ceil(ms/8.)/4)
             radiusfin = 1#max(1, ms/128)
-            print 'Nos of iteration',trainlen
+            print('Nos of iteration',trainlen)
 
     radius = np.linspace(radiusin, radiusfin, trainlen)
     ##################################################
@@ -1110,7 +1109,7 @@ def view_2d_Pack(self, text_size,which_dim='all', what = 'codebook',save='No', g
         if hasattr(self, 'cluster_labels'):
             codebook = getattr(self, 'cluster_labels')
         else:
-            print 'clustering based on default parameters...'
+            print('clustering based on default parameters...')
             codebook = self.cluster()
         h = .2
         w= .001

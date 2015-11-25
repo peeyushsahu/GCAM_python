@@ -81,11 +81,11 @@ def get_genes(path):
     except IOError:
         print ("Error: Query file does not appear to exist.")
         sys.exit(1)
-    if len(geneList) == 0:
-        raise IOError("Empty query list.")
     f_genelist = list(set(geneList))
     print ('Size of user provided gene list:' + str(len(geneList)))
     print ('No. of genes after removing duplicates:' + str(len(f_genelist)))
+    if len(f_genelist) < 10:
+        raise IOError("Minimum gene requirement for the analysis is 10.")
     return f_genelist
 
 def key_celltypes(path):
@@ -159,21 +159,6 @@ def read_previous_occurrence_table(resource_path):
         print ("Warning: Creating Gene occurrence db, analysis will take longer.")
         return None, False
     return gene_occu_db, True
-
-
-def read_previous_gene_pmid_table(resource_path):
-    '''
-    This function will read pmids for pre-analysed gene.
-    :param resource_path:
-    :return:
-    '''
-    try:
-        print ('reading previously analysed genes for pmids')
-        gene_pmid_db = read_csv(os.path.join(resource_path, 'gene_pmid_db.csv'), header=0, sep=",", index_col=0)
-    except:
-        print ("Warning: Creating Gene pmids db, analysis will take longer.")
-        return None, False
-    return gene_pmid_db, True
 
 
 def read_pheno_data(path):

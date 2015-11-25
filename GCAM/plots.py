@@ -224,7 +224,7 @@ class HiearchicalHeatmap():
         return fig, axm, axcb, cb
 
 
-def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
+def stack_barplot(sigcelltype, path, key_celltypes, name='_', method='genebased'):
     #print 'Key_celltypes', key_celltypes
     d_labels = ["celltype"]
     d_widths = [0.1]
@@ -318,7 +318,7 @@ def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
                     cell_type,
                     number_label,
                     adjustment,
-                    edgeCols=['#000000']*int(number_label),
+                    edgeCols=['#ffffff']*int(number_label),
                     xLabels=d_labels,
                     scale=True,
                     gap=gap,
@@ -329,7 +329,7 @@ def stack_barplot(sigcelltype, path, key_celltypes, method='genebased'):
     plt.setp(ax6.xaxis.get_majorticklabels(), rotation=90)
     #fig.subplots_adjust(bottom=0.4)
     plt.tight_layout()
-    plt.savefig(os.path.join(path, 'GCAM_'+method+'_stacks.svg'))
+    plt.savefig(os.path.join(path, 'GCAM_'+method+'_stacks'+name+'.svg'))
     plt.clf()
     #return
 
@@ -390,7 +390,7 @@ def stackedBarPlot(ax,                                 # axes to plot onto
         data_copy /= data_stack[levels-1]
         data_stack /= data_stack[levels-1]
         if heights is not None:
-            print "WARNING: setting scale and heights does not make sense."
+            print("WARNING: setting scale and heights does not make sense.")
             heights = None
     elif heights is not None:
         data_copy /= data_stack[levels-1]
@@ -500,6 +500,9 @@ def plot_celltypesignificance(path, plotdf):
     import math
     print ('plotting celltype significance plot')
     plotdf = plotdf[plotdf['FDR'] < 0.05]
+    plotdf = plotdf.sort('P-val',ascending=True)
+    if len(plotdf) > 15:
+        plotdf = plotdf[:15]
     l = plotdf['genecluster'].tolist()
     t = plotdf['P-val'].tolist()
     s = range(1, len(plotdf)+1)
@@ -532,4 +535,52 @@ def plot_celltypesignificance(path, plotdf):
     plt.ylabel('Gene cluster size', fontsize=12)
     plt.tight_layout()
     plt.savefig(os.path.join(path, 'GCAM_SigCelltype.svg'))
+    plt.clf()
+
+
+def heatmap_Sigcelltype(df, path, edgecolors='w', log=False):
+    '''
+
+    :param df:
+    :param edgecolors:
+    :param log:
+    :return:
+    '''
+    import matplotlib.colors as mcolors
+    import numpy as np
+    width = len(df.columns)/7*10
+    height = len(df.index)/7*10
+
+    fig, ax = plt.subplots(figsize=(20,10))#(figsize=(width,height))
+    dfSize = np.arange(0, max(df.max()), max(df.max())/8)
+    cmap, norm = mcolors.from_levels_and_colors(dfSize, ['#188000', '#5da64c', '#b9d8b2', '#ffffff', '#ffb2b2', '#ff4c4c', '#ff0000'] ) # ['MidnightBlue', Teal]['Darkgreen', 'Darkred']
+    heatmap = ax.pcolor(df,
+                        edgecolors=edgecolors,  # put white lines between squares in heatmap
+                        cmap=cmap,
+                        norm=norm)
+    data = df.values
+    for y in range(data.shape[0]):
+        for x in range(data.shape[1]):
+            plt.text(x + 0.5 , y + 0.5, '%.4f' % data[y, x], #data[y,x] +0.05 , data[y,x] + 0.05
+                 horizontalalignment='center',
+                 verticalalignment='center',
+                 size=10,
+                 color='b')
+
+    ax.autoscale(tight=True)  # get rid of whitespace in margins of heatmap
+    ax.set_aspect('equal')  # ensure heatmap cells are square
+    ax.xaxis.set_ticks_position('top')  # put column labels at the top
+    ax.tick_params(bottom='off', top='off', left='off', right='off')  # turn off ticks
+
+    ax.set_yticks(np.arange(len(df.index)) + 0.5)
+    ax.set_yticklabels(df.index, size=15)
+    ax.set_xticks(np.arange(len(df.columns)) + 0.5)
+    ax.set_xticklabels(df.columns, rotation=90, size= 15)
+
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", "3%", pad="1%")
+    #fig.colorbar(heatmap, cax=cax)
+    plt.tight_layout()
+    plt.savefig(os.path.join(path, 'GCAM_heatmap_SigCelltype.svg'))
     plt.clf()

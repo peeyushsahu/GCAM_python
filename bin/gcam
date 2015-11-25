@@ -111,12 +111,16 @@ def add_expressionbased_parser(parser):
                              help="Define fold difference between samples cluster after SOM to select genes for celltype enrichment analyis.")
     group_input.add_argument("-C", "--controlSample", type=str, required=True, dest="controlsample",
                              help="Set control sample for relative celltype fraction analysis.")
-    group_input.add_argument("-c", "--clustrsizeSigcelltype", type=int, default=15, dest="celltypeClusterSize",
+    group_input.add_argument("-c", "--clustrsizeSigcelltype", type=int, default=30, dest="celltypeClusterSize",
                              help="Lowest number of genes associated for celltype fraction analysis.")
     group_input.add_argument("-n", "--numiteration", type=int, default=100, dest="somiter",
                              help="Number of iteration performed for SOM clustering.")
-    group_input.add_argument("-R", "--regCoffi", type=str, default='nuSVR', dest="regMethod", choices=['nuSVR', 'one2all', 'one2one', 'nuSVR-one2one'],
+    group_input.add_argument("-R", "--regCoffi", type=str, default='nuSVR-one2one', dest="regMethod", choices=['nuSVR', 'one2all', 'one2one', 'nuSVR-one2one'],
                              help="Define the method to find celltype fraction.")
+    group_input.add_argument("-O", "--remOverlapping", type=bool, default=True, dest="remOverlapping", choices=[True, False],
+                             help="To remove overlapping genes between significant cell types.")
+    group_input.add_argument("-m", "--meanAsControl", type=bool, default=False, dest="meanAsControl", choices=[True, False],
+                             help="Instead of choosing a reference, GCAM takes mean of all samples as reference.")
 
 
 

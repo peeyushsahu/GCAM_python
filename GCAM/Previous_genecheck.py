@@ -105,6 +105,7 @@ def occurrence_df(genenames, resource_path, subquery):
     if not created:
         occuDF.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
     if join:
+        print("Updating gene occurrence db....")
         update_dataframe = pd.concat([occuDF.drop(['celltype'], axis=1), dataframe], axis=1)
         update_dataframe.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
         occuDF = pd.concat([occuDF, foundgenes_df], axis=1)
