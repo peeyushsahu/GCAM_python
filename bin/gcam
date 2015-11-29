@@ -73,13 +73,15 @@ def add_genebased_parser(parser):
                              help="file path to gene names")
     group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
                              help="additional search term with gene name to select specific abstracts")
-    group_input.add_argument("-s", "--synonym", type=bool, default=False, dest="synonym", choices=[True, False],
-                             help="If you want to consider synonyms for query genes, default=False")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
                              help="Only if synonym is True. Choose organism from human or mouse")
-    group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", choices=[True, False],
-                             help="This will calculate the enrichment of data for the selected key cell-types.")
+    group_input.add_argument("-c", "--clustrsizeSigcelltype", type=int, default=30, dest="celltypeClusterSize",
+                             help="Lowest number of genes associated for celltype fraction analysis.")
 
+    group_input.add_argument("-k", "--keycelltype",dest="key_celltype_list", action='store_true',
+                             help="This will calculate the enrichment of data for the selected key cell-types.")
+    group_input.add_argument("-s", "--synonym", dest="synonym", action='store_true',
+                             help="If you want to consider synonyms for query genes, default=False")
 
 def add_expressionbased_parser(parser):
     '''
@@ -92,24 +94,22 @@ def add_expressionbased_parser(parser):
     group_input = argparser_exprbased.add_argument_group("Expression based analysis arguments")
 
     group_input.add_argument("-o", "--outdir", dest="outdir", type=str, required=True,
-                             help = "If specified all output files will be written to that directory. Default: the current working directory")
+                             help = "If specified all output files will be written to output directory, default: the current working directory")
     group_input.add_argument("-e", "--exppath", type=str, dest="exppath", required=True,
                              help="file path to expression data")
     group_input.add_argument("-p", "--phenopath", type=str, dest="phenopath", required=True,
                              help="file path to pheno data")
     group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
                              help="additional search term with gene name to select specific abstracts")
-    group_input.add_argument("-s", "--synonym", type=bool, default=False, dest="synonym", choices=[True, False],
+    group_input.add_argument("-s", "--synonym", dest="synonym", action='store_true',
                              help="If you want to consider synonyms for query genes, default=False")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
                              help="Only if synonym is True. Choose organism from human or mouse")
-    group_input.add_argument("-k", "--keycelltype", type=bool, default=False, dest="key_celltype_list", choices=[True, False],
-                             help="Compute enrichment for key celltypes.")
     group_input.add_argument("-g", "--gridsize", type=int, default=10, dest="som_gridsize",
                              help="Define grid size for SOM clustering, default 10.")
     group_input.add_argument("-f", "--foldifference", type=float, default=4.0, dest="som_foldifference",
                              help="Define fold difference between samples cluster after SOM to select genes for celltype enrichment analyis.")
-    group_input.add_argument("-C", "--controlSample", type=str, required=True, dest="controlsample",
+    group_input.add_argument("-C", "--controlSample", type=str, default=None, dest="controlsample",
                              help="Set control sample for relative celltype fraction analysis.")
     group_input.add_argument("-c", "--clustrsizeSigcelltype", type=int, default=30, dest="celltypeClusterSize",
                              help="Lowest number of genes associated for celltype fraction analysis.")
@@ -117,10 +117,16 @@ def add_expressionbased_parser(parser):
                              help="Number of iteration performed for SOM clustering.")
     group_input.add_argument("-R", "--regCoffi", type=str, default='nuSVR-one2one', dest="regMethod", choices=['nuSVR', 'one2all', 'one2one', 'nuSVR-one2one'],
                              help="Define the method to find celltype fraction.")
-    group_input.add_argument("-O", "--remOverlapping", type=bool, default=True, dest="remOverlapping", choices=[True, False],
+    group_input.add_argument("--selectCelltypes", type=str, default=None, dest="selectCelltypes",
+                             help="Comma separated list of celltypes, to remove their effects from celltype-fraction analysis.")
+
+    group_input.add_argument("-k", "--keycelltype", dest="key_celltype_list", action='store_true',
+                             help="Compute enrichment for key celltypes.")
+    group_input.add_argument("-O", "--remOverlapping", dest="remOverlapping", action='store_true',
                              help="To remove overlapping genes between significant cell types.")
-    group_input.add_argument("-m", "--meanAsControl", type=bool, default=False, dest="meanAsControl", choices=[True, False],
-                             help="Instead of choosing a reference, GCAM takes mean of all samples as reference.")
+    group_input.add_argument("-m", "--meanAsControl", dest="meanAsControl", action='store_true',
+                             help="Instead of taking a reference sample, GCAM takes mean of all samples as reference.")
+
 
 
 

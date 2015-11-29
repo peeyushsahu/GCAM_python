@@ -71,7 +71,7 @@ def occurrence_df(genenames, resource_path, subquery):
     join = False
     if dataframe is not None:
         new_genenames, foundgenes_df = check_old_analysed_genes(genenames, dataframe)
-        join = True
+        if len(new_genenames) > 0: join = True
     else:
         foundgenes_df = pd.DataFrame()
         new_genenames = genenames
@@ -81,9 +81,9 @@ def occurrence_df(genenames, resource_path, subquery):
     occu_time = 0
     total_abstract = 0
     abs_in_DB = 0
-    count = 0 + len(foundgenes_df)
+    count = 0 + len(new_genenames)
     for gene in new_genenames:
-        sys.stdout.write("\rGenes analysed:%d" % count)
+        sys.stdout.write("\rGenes remain for analyse:%d" % count)
         sys.stdout.flush()
         #print gene
         fstart = timeit.default_timer()
@@ -99,16 +99,16 @@ def occurrence_df(genenames, resource_path, subquery):
         occuDF = GeneObj.get_occurrence(cellDB=occuDF)
         ostop = timeit.default_timer()
         occu_time = occu_time + (ostop - ostart)
-        count += 1
+        count -= 1
     joincellsynonym(occuDF, resource_path)
 
     if not created:
         occuDF.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
     if join:
-        print("Updating gene occurrence db....")
+        print("\nUpdating gene occurrence db....")
         update_dataframe = pd.concat([occuDF.drop(['celltype'], axis=1), dataframe], axis=1)
         update_dataframe.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
-        occuDF = pd.concat([occuDF, foundgenes_df], axis=1)
+    occuDF = pd.concat([occuDF, foundgenes_df], axis=1)
 
     #print ('Total no. of abstarcts: ' + str(total_abstract))
     #print ('Total no. of abstarcts annotated in DB:' + str(abs_in_DB))

@@ -494,17 +494,16 @@ def stackedBarPlot(ax,                                 # axes to plot onto
         plt.ylabel(ylabel)
 
 #########################################
-def plot_celltypesignificance(path, plotdf):
+def plot_celltypesignificance(path, plotdf, args):
     import matplotlib.pyplot as plt
     import numpy as np
     import math
     print ('plotting celltype significance plot')
-    plotdf = plotdf[plotdf['FDR'] < 0.05]
-    plotdf = plotdf.sort('P-val',ascending=True)
-    if len(plotdf) > 15:
-        plotdf = plotdf[:15]
+    #plotdf = plotdf[plotdf['genecluster'] > args.celltypeClusterSize]
+    if args.subcommand_name == 'exprbased':
+        plotdf = plotdf.sort('p-val',ascending=True)
     l = plotdf['genecluster'].tolist()
-    t = plotdf['P-val'].tolist()
+    t = plotdf['p-val'].tolist()
     s = range(1, len(plotdf)+1)
     name = plotdf['celltype'].tolist()
     area = [(math.log(x, 10) * -15) for x in t]
@@ -512,6 +511,9 @@ def plot_celltypesignificance(path, plotdf):
     #print area
     plt.scatter(s, l, s=area, c=color, alpha=0.5)
     plt.grid(True, linestyle=':', color='black')
+
+    # draw a thick red hline at y=0 that spans the xrange
+    h = plt.axhline(linewidth=1, color='r', y=args.celltypeClusterSize, linestyle='--')
 
     for i in range(0, len(t)):
         plt.annotate(name[i], xy=(s[i], l[i]), xycoords='data',
@@ -552,8 +554,9 @@ def heatmap_Sigcelltype(df, path, edgecolors='w', log=False):
     height = len(df.index)/7*10
 
     fig, ax = plt.subplots(figsize=(20,10))#(figsize=(width,height))
-    dfSize = np.arange(0, max(df.max()), max(df.max())/8)
-    cmap, norm = mcolors.from_levels_and_colors(dfSize, ['#188000', '#5da64c', '#b9d8b2', '#ffffff', '#ffb2b2', '#ff4c4c', '#ff0000'] ) # ['MidnightBlue', Teal]['Darkgreen', 'Darkred']
+    dfMax = max(df.max())+0.02
+    dfSize = np.arange(0, dfMax, dfMax/8)
+    cmap, norm = mcolors.from_levels_and_colors(dfSize, ['#188000', '#5da64c', '#b9d8b2', '#ffffff', '#ff8884', '#ff413a', '#e51009'] ) # ['MidnightBlue', Teal]['Darkgreen', 'Darkred']
     heatmap = ax.pcolor(df,
                         edgecolors=edgecolors,  # put white lines between squares in heatmap
                         cmap=cmap,
@@ -579,7 +582,7 @@ def heatmap_Sigcelltype(df, path, edgecolors='w', log=False):
 
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", "3%", pad="1%")
+    #cax = divider.append_axes("right", "3%", pad="1%")
     #fig.colorbar(heatmap, cax=cax)
     plt.tight_layout()
     plt.savefig(os.path.join(path, 'GCAM_heatmap_SigCelltype.svg'))

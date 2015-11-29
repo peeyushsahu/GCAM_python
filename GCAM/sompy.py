@@ -10,7 +10,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
-import numexpr as ne
+#import numexpr as ne
 from time import time
 import scipy.spatial as spdist
 import timeit
