@@ -101,7 +101,6 @@ def occurrence_df(genenames, resource_path, subquery):
         occu_time = occu_time + (ostop - ostart)
         count -= 1
     joincellsynonym(occuDF, resource_path)
-
     if not created:
         occuDF.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
     if join:

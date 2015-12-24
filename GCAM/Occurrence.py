@@ -71,6 +71,9 @@ def joingenesynonym(colloccu, primarygemename, geneSyn):
         if gene in geneSyn.index and geneSyn.loc[gene][1] != '0':
             synonym = geneSyn.loc[gene][1].strip(',').split(',')
             for syn in synonym:
+                #print colloccu[syn.lower()].shape
+                if len(colloccu[syn.lower()].shape) > 1:
+                    raise ValueError("Synonym Error: Gene list contains more than 2 gene synonym belogns to same gene. You can re-run without synonym parameter.")
                 col2drop.append(syn.lower())
                 colloccu[gene] = colloccu[gene] + colloccu[syn.lower()]
     colloccu = colloccu.drop(col2drop, axis=1)

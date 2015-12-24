@@ -73,6 +73,11 @@ def warnings_error(args):
         if args.controlsample is None:
             if not args.meanAsControl:
                 raise ValueError("Please specifiy contol sample name OR set --meanAsControl, -m")
+        userCelltype = args.selectCelltypes
+        if userCelltype is not None:
+            userCelltype = [x.strip() for x in userCelltype.split(',')]
+            if len(userCelltype) > 26:
+                raise ValueError("Selected celltypes for analysis should be less than 26 and more than 0.")
 
 
 def gene_based(args, resource_path, genenames, outdir):
@@ -92,7 +97,11 @@ def gene_based(args, resource_path, genenames, outdir):
     if synonym:
         cellOccu = Occurrence.joingenesynonym(cellOccu, primarygene, geneSyn)
     # Reduced celltypes
-    if args.key_celltype_list:
+    if args.subcommand_name == 'genebased' and args.key_celltype_list:
+        key_celltypes = FilesFolders.key_celltypes(resource_path)
+        cellOccu = cellOccu[cellOccu['celltype'].isin(key_celltypes)]
+    # For exprbased
+    if args.subcommand_name == 'exprbased' and args.selectCelltypes is None:
         key_celltypes = FilesFolders.key_celltypes(resource_path)
         cellOccu = cellOccu[cellOccu['celltype'].isin(key_celltypes)]
     # print ('size of new df', len(cellOccu))
@@ -100,13 +109,13 @@ def gene_based(args, resource_path, genenames, outdir):
     cellOccu = cellOccu.drop(['celltype'], axis=1)
     ## Subtract eg. cd4 t cell from t cell
     #cellOccu = Occurrence.subtract_cellnamepeat(cellOccu, resource_path)
-    #cellOccu.to_csv(outdir + os.path.sep + 'GCAM_occurrence.csv', sep='\t', encoding='utf-8', ignore_index=True)
+    cellOccu.to_csv(outdir + os.path.sep + 'GCAM_occurrence.csv', sep='\t', encoding='utf-8', ignore_index=True)
     # Scale df for heatmap and do further analysis
     significanceDF = SignificanceTesting.SignificanceObject(cellOccu)
     significanceDF.heatmapdf_create()
     significanceDF.plot_heatmap(outdir)
     significanceDF.fisher_occurrence_test()
-    write_result(significanceDF, outdir, args, key_celltypes=args.key_celltype_list)
+    write_result(significanceDF, outdir, args)
     return significanceDF
 
 
@@ -114,7 +123,7 @@ def expr_based(outdir, expressiondf, pheno_data, args):
     # Expression analysis of celltype
     return ExpressionClustering.SOMclustering(expressiondf, pheno_data, outdir, float(args.som_foldifference), iteration=int(args.somiter))
 
-def write_result(significanceDF, outdir, args, key_celltypes):
+def write_result(significanceDF, outdir, args):
     '''
     Print all the output for genebased analysis.
     :param significanceDF:

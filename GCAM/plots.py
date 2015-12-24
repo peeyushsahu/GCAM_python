@@ -224,7 +224,7 @@ class HiearchicalHeatmap():
         return fig, axm, axcb, cb
 
 
-def stack_barplot(sigcelltype, path, key_celltypes, name='_', method='genebased'):
+def stack_barplot(args, sigcelltype, path, name='_', method='genebased'):
     #print 'Key_celltypes', key_celltypes
     d_labels = ["celltype"]
     d_widths = [0.1]
@@ -233,49 +233,56 @@ def stack_barplot(sigcelltype, path, key_celltypes, name='_', method='genebased'
                 '#99CCFF', '#CC6699', '#CC99FF', '#6600FF', '#CD853F', '#FFC0CB', '#FF9900', '#B0E0E6',
                 '#800080', '#663399', '#70dd3e', '#BC8F8F', '#4169E1', '#8B4513', '#FA8072', '#F4A460',
                 '#2E8B57', '#ffc8a2','#00FF00', '#FFFF66', '#191919', '#bcffad']
-    if not key_celltypes:
+    if method == 'genebased' and not args.key_celltypes:
         if len(sigcelltype) > 15: sigcelltype = sigcelltype[:15]
         cells = [1.0]*len(sigcelltype)
         number_label = float(len(sigcelltype))
         adjustment = 0.02
         plot_color = d_colors[:len(cells)]
         #print sigcelltype
-        if method == 'genebased':
+        #if method == 'genebased':
+        genes = [0.0]*len(cells)
+        stackplot_data.append(cells)
+        sigcelltype = sigcelltype.sort(['P-val'], ascending=True)
+        sigcelltype.index = range(0, len(sigcelltype))
+        cell_type = sigcelltype['celltype']
+        for ind, row in sigcelltype.iterrows():
+            genes[ind] = float(row['genecluster'])
+        stackplot_data.insert(0, genes)
+        d_labels.insert(0, 'sample')
+        d_widths.insert(0, 0.5)
+
+    if not args.selectCelltypes is None and method == 'exprbased':
+        if len(sigcelltype) > 15: sigcelltype = sigcelltype[:15]
+        cells = [1.0]*len(sigcelltype)
+        number_label = float(len(sigcelltype))
+        adjustment = 0.02
+        plot_color = d_colors[:len(cells)]
+        cell_type = list(sigcelltype.index)
+        print cell_type
+        #print sigcelltype
+        stackplot_data.append(cells)
+        #cols = [col for col in sigcelltype.columns if 'FC' in col]
+        #print sigcelltype.columns
+        for col in sigcelltype.columns:
             genes = [0.0]*len(cells)
-            stackplot_data.append(cells)
-            sigcelltype = sigcelltype.sort(['P-val'], ascending=True)
-            sigcelltype.index = range(0, len(sigcelltype))
-            cell_type = sigcelltype['celltype']
-            for ind, row in sigcelltype.iterrows():
-                genes[ind] = float(row['genecluster'])
+            for i, r in sigcelltype.iterrows():
+                #print i
+                ind = cell_type.index(i)
+                genes[ind] = float(r[col])
             stackplot_data.insert(0, genes)
-            d_labels.insert(0, 'sample')
+            d_labels.insert(0, col)
             d_widths.insert(0, 0.5)
-        if method == 'exprbased':
-            cell_type = list(sigcelltype.index)
-            #print sigcelltype
-            stackplot_data.append(cells)
-            #cols = [col for col in sigcelltype.columns if 'FC' in col]
-            #print sigcelltype.columns
-            for col in sigcelltype.columns:
-                genes = [0.0]*len(cells)
-                for i, r in sigcelltype.iterrows():
-                    #print i
-                    ind = cell_type.index(i)
-                    genes[ind] = float(r[col])
-                stackplot_data.insert(0, genes)
-                d_labels.insert(0, col)
-                d_widths.insert(0, 0.5)
             #print stackplot_data
     else:
-        cell_type = ['Epithelial cell', 'Langerhans cell', 'megacaryocyte', 'macrophage', 'Alveolar macrophage',
-                     'm1 macrophage','m2 macrophage', 'monocyte', 'dendritic cell', 'microglia',
-                     'granulocyte', 'neutrophil', 'mast cell', 'Natural killer cell', 'Kupffer cell', 'Plasma cell',
+        cell_type = ['macrophage', 'Alveolar macrophage',
+                     'm1 macrophage','m2 macrophage', 'monocyte', 'dendritic cell', 'glial cell',
+                     'neutrophil', 'mast cell', 'Natural killer cell', 'Kupffer cell', 'Plasma cell',
                      'eosinophil', 'naive B cell', 'memory B cell', 'B lymphocyte', 'T lymphocyte',
                      'naive T cell', 'memory T cell', 'CD8 T cell', 'CD4 T cell', 'regulatory T cell','Cytotoxic T cell',
-                    'helper T cell']
-        d_colors = ['#9afe2e', '#6bb120', '#4d7f17', '#009688', '#35a79c', '#54b2a9', '#83d0c9', '#ffdaaf',
-                    '#ff9237', '#eb5300', '#000000', '#8d8282', '#bbbbbb', '#f5f8ee', '#feffc3',
+                     'helper T cell']
+        d_colors = ['#009688', '#35a79c', '#54b2a9', '#83d0c9', '#ffdaaf',
+                    '#ff9237', '#eb5300', '#8d8282', '#bbbbbb', '#f5f8ee', '#feffc3',
                     '#fcff83', '#f9e909', '#fe2e2e', '#cb2424', '#b62020', '#e18f8f', '#fcbbbb',
                     '#efbbff','#d896ff', '#be29ec','#800080', '#660066', '#470047']
 
@@ -554,9 +561,12 @@ def heatmap_Sigcelltype(df, path, edgecolors='w', log=False):
     height = len(df.index)/7*10
 
     fig, ax = plt.subplots(figsize=(20,10))#(figsize=(width,height))
-    dfMax = max(df.max())+0.02
-    dfSize = np.arange(0, dfMax, dfMax/8)
-    cmap, norm = mcolors.from_levels_and_colors(dfSize, ['#188000', '#5da64c', '#b9d8b2', '#ffffff', '#ff8884', '#ff413a', '#e51009'] ) # ['MidnightBlue', Teal]['Darkgreen', 'Darkred']
+    dfMax = max(df.max()) + max(df.max())/15
+    dfSize = np.linspace(0, dfMax, num=15)
+    print dfSize
+    cmap, norm = mcolors.from_levels_and_colors(dfSize, ['#3e7d00', '#579619', '#a2c57f', '#b4d099', '#c7dcb2',
+                                                         '#d9e7cc', '#ecf3e5', '#ffffff', '#fae5e5', '#f5cccc',
+                                                         '#f0b2b2', '#eb9999', '#e67f7f', '#d21919'] ) # ['MidnightBlue', Teal]['Darkgreen', 'Darkred']
     heatmap = ax.pcolor(df,
                         edgecolors=edgecolors,  # put white lines between squares in heatmap
                         cmap=cmap,

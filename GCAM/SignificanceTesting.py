@@ -143,12 +143,12 @@ class SignificanceObject():
         #print self.cellgenedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
         cellgenedf = self.cellgenedf
-        c = len(cellgenedf[cellgenedf['enrichment'] < 1])
+        c = len(cellgenedf[cellgenedf['enrichment'] > 1])
         d = len(cellgenedf) #[cellgenedf['P-val'] < 0.5]
         for celltype, val in cellgroup:
             #print celltype
             #print val
-            a = len(val[val['enrichment'] < 1])
+            a = len(val[val['enrichment'] > 1])
             b = len(val) - a
             cc = c - a
             dd = d - (a+b+cc)
@@ -159,6 +159,10 @@ class SignificanceObject():
                 sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True)
         sigcelltype.columns = ['celltype', 'genecluster', 'p-val']
         length = len(sigcelltype[sigcelltype['p-val'] < 0.05])
+        # Significant celltype check
+        if length < 1:
+            raise ZeroDivisionError('No siginificant celltypes.')
+
         for k, v in sigcelltype.iterrows():
             if v['p-val'] < 0.05/length:
                 sigcelltype.loc[k, 'q-val'] = v['p-val']*length
