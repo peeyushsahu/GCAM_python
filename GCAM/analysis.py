@@ -51,12 +51,11 @@ def write_parameter(args, subcommand, outdir):
     :return:
     '''
     if subcommand == 'exprbased':
-        parameter = open(os.path.join(outdir,'parameter.txt'), 'w')
+        parameter = open(os.path.join(outdir, 'parameter.txt'), 'w')
         parameter.write("Analysis type: "+subcommand+"\n")
         parameter.write("Som grid size: "+str(args.som_gridsize)+"\n")
-        parameter.write("Minimun no of genes for cell fraction analysis: "+str(args.celltypeClusterSize)+"\n")
+        parameter.write("Minimum no of genes for cell fraction analysis: "+str(args.celltypeClusterSize)+"\n")
         parameter.write("Regression method used: "+args.regMethod+"\n")
-        parameter.write("Remove overlapping genes before: "+str(args.remOverlapping)+"\n")
         parameter.write("Consider mean of all samples as reference: "+str(args.meanAsControl)+"\n")
         if not args.meanAsControl:
             parameter.write("Control sample name: "+args.controlsample+"\n")
@@ -72,12 +71,12 @@ def warnings_error(args):
     if subcommand == 'exprbased':
         if args.controlsample is None:
             if not args.meanAsControl:
-                raise ValueError("Please specifiy contol sample name OR set --meanAsControl, -m")
+                raise ValueError("Please specify control sample name OR set --meanAsControl, -m")
         userCelltype = args.selectCelltypes
         if userCelltype is not None:
             userCelltype = [x.strip() for x in userCelltype.split(',')]
             if len(userCelltype) > 26:
-                raise ValueError("Selected celltypes for analysis should be less than 26 and more than 0.")
+                raise ValueError("Selected cell-types for analysis should be less than 26 and more than 0.")
 
 
 def gene_based(args, resource_path, genenames, outdir):
@@ -133,7 +132,9 @@ def write_result(significanceDF, outdir, args):
     cellgenedf.sort(['p-val'], ascending=True)
     if len(cellgenedf)>0:cellgenedf.to_csv(outdir + os.path.sep + 'GCAM_sigenes.txt', sep='\t', encoding='utf-8', index=False)
     else: print('No significant genes for celltype')
-    sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['q-val'] < 0.05]
+    if args.subcommand_name == 'genebased':
+        sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['q-val'] < 0.05]
+    else: sigCelltypedf = significanceDF.sigCelltypedf#[significanceDF.sigCelltypedf['q-val'] < 0.05]
     #plots.stack_barplot(sigCelltypedf, outdir, key_celltypes)
     if len(sigCelltypedf) > 1:
         plots.plot_celltypesignificance(outdir, sigCelltypedf, args)

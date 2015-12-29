@@ -136,10 +136,11 @@ def read_expression_file(path):
     :return:
     '''
     try:
-        #print ('exprs path:'+ path)
+        # print ('exprs path:'+ path)
         expressiondf = read_csv(path, header=0, sep="\t", index_col=0)
-        expressiondf.index = expressiondf.index.str.lower()
-        expressiondf = expressiondf[expressiondf.index.str.len() >= 3] ##Removing gene names with only 2 letters.
+        # print(expressiondf.head(1))
+        expressiondf.index = expressiondf.index.to_series().str.lower()
+        expressiondf = expressiondf[expressiondf.index.to_series().str.len() >= 3] ##Removing gene names with only 2 letters.
     except IOError:
         print ("Error: Expression File does not appear to exist.")
         sys.exit(0)

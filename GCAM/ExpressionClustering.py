@@ -26,7 +26,7 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
         newDataDFcolumns = newDataDF.columns
         for col in newDataDFcolumns:
             normnewDataDF[col] = (newDataDF[col] - newDataDF[col].mean())/newDataDF[col].std()
-        normnewDataDF['Symbol'] = normnewDataDF.index.str.lower()
+        normnewDataDF['Symbol'] = normnewDataDF.index.to_series().str.lower()
         normnewDataDF.index = range(0, len(normnewDataDF))
         normnewDataDF.to_csv(os.path.join(path, 'normjoinedexpr.txt'), sep='\t')
         Data = normnewDataDF.drop(['Symbol'], axis=1)
@@ -161,9 +161,14 @@ def find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clust
     cellType = genelist4expr.keys()
     dict4sortedGenes = {}
     gene2cell_group = sigGene.groupby('celltype')
+    # print genelist4expr
     # Check in celltype sig. table for sig cell type.
+    if len(sigCelltype[sigCelltype['genecluster'] > clusterSize]) < 3:
+        sys.exit('Warning: Less than 3 cell-types are above cluster size. '
+                 'Please choose a lower threshold for Cluster size for significant cell-type.')
     for k, v in sigCelltype.iterrows():
         if v['genecluster'] > clusterSize:  # and v['p-val'] <= 0.05
+            # print ('Celltype above cluster size:', v['celltype'], v['p-val'], v['genecluster'])
             df = gene2cell_group.get_group(v['celltype'])
             # Take the sig cell type and get genes associated to it.
             for key, val in df.iterrows():
@@ -197,6 +202,8 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
     This methods creates a dictionary of celltypes and enriched gene expression dataframes. This dataframe is further
      analysed for the regression cofficient.
     '''
+    from collections import OrderedDict
+
     exprdata.index = exprdata['Symbol']
     #pheno = set(phenodata['phenotype'])
     pheno = phenodata['phenotype']
@@ -216,26 +223,25 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
     if userCelltype is None:
         sigCelltypedf = significanceDF.sigCelltypedf
         sigCelltypedf = sigCelltypedf[sigCelltypedf['genecluster'] > clusterSize]
-    if args.remOverlapping:
-        print('Removing overlapping genes')
-        gene2cellCluster = find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clusterSize, args)
-        #cellexpr_dict = {}
-        from collections import OrderedDict
-        cellexpr_dict = OrderedDict()
-        for celltype, genelist in gene2cellCluster.iteritems():
-            if len(genelist) > 10:  # Minimum genes per celltype for comparision
-                #print celltype
-                for i in pheno:
-                    geneexpr_dict = {}
-                    for gene in genelist:
-                        geneexpr_dict[gene] = exprdata.loc[gene, i]
-                    cellexpr_dict[i] = geneexpr_dict
-                expr[celltype] = pd.DataFrame(cellexpr_dict)
-                #expr[celltype].to_csv(os.path.join(path, celltype+'_GCAM_cellexpr.txt'), sep='\t')
-                #print expr
-        if len(expr) == 0:
-            raise ValueError("No significant gene for fraction comparison.")
 
+    # if args.remOverlapping:
+    print('Removing overlapping genes')
+    gene2cellCluster = find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clusterSize, args)
+    cellexpr_dict = OrderedDict()
+    for celltype, genelist in gene2cellCluster.iteritems():
+        if len(genelist) > 10:  # Minimum genes per celltype for comparision
+            #print celltype
+            for i in pheno:
+                geneexpr_dict = {}
+                for gene in genelist:
+                    geneexpr_dict[gene] = exprdata.loc[gene, i]
+                cellexpr_dict[i] = geneexpr_dict
+            expr[celltype] = pd.DataFrame(cellexpr_dict)
+            #expr[celltype].to_csv(os.path.join(path, celltype+'_GCAM_cellexpr.txt'), sep='\t')
+            #print expr
+    if len(expr) == 0:
+        raise ValueError("No significant gene for fraction comparison.")
+    '''
     else:
         gene2cell_group = cellgenedf.groupby('celltype')
         for k, v in sigCelltypedf.iterrows():
@@ -249,6 +255,7 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
                             geneexpr_dict[val['gene']] = exprdata.loc[val['gene'], i]
                     cellexpr_dict[i] = geneexpr_dict
                 expr[v['celltype']] = pd.DataFrame(cellexpr_dict)
+    '''
     if args.controlsample is None:
         print("mean as control.")
         return mean_coffi4exprdf(expr, path, args, method = args.regMethod)
@@ -327,7 +334,7 @@ def coffi4exprdf(expr, path, args, control=None, method='nuSVR'):
                 plotDataframe.loc[cell, sample+'_vs_'+control] = coff #* scaleSig.loc[cell,'genecluster_scale']
     '''
     if method == 'nuSVR':
-        print('Using Univeriate nuSVR.....')
+        print('Using nuSVR.....')
         for cell in expr.keys():
             data = expr.get(cell)
             target = data[control]
@@ -399,7 +406,7 @@ def mean_coffi4exprdf(expr, path, args, method='nuSVR'):
                 plotDataframe.loc[cell, sample] = coff # scaleSig.loc[cell,'genecluster_scale']
     '''
     if method == 'nuSVR':
-        print('Using Univeriate nuSVR.....')
+        print('Using nuSVR.....')
         for cell in expr.keys():
             #print(cell)
             data = expr.get(cell)
@@ -467,7 +474,7 @@ def plot_expressionvseignificance(path, plotdf):
             ha='center', va='bottom',
             bbox=dict(boxstyle='round, pad=0.2', fc='yellow', alpha=0.2),
             fontsize=8)
-## Plot legend
+    ## Plot legend
     l1 = plt.scatter([],[], s=50, c='gray', alpha=0.5)
     l2 = plt.scatter([],[], s=200, c='gray', alpha=0.5)
     labels = ["less significant", "highly significant"]

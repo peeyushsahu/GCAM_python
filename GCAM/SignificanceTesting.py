@@ -161,7 +161,7 @@ class SignificanceObject():
         length = len(sigcelltype[sigcelltype['p-val'] < 0.05])
         # Significant celltype check
         if length < 1:
-            raise ZeroDivisionError('No siginificant celltypes.')
+            raise ValueError('No siginificant celltypes.')
 
         for k, v in sigcelltype.iterrows():
             if v['p-val'] < 0.05/length:

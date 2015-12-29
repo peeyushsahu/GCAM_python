@@ -120,8 +120,8 @@ def add_expressionbased_parser(parser):
     group_input.add_argument("--selectCelltypes", type=str, default=None, dest="selectCelltypes",
                              help="Comma separated list of celltypes, to remove their effects from celltype-fraction analysis. Max:26")
 
-    group_input.add_argument("-O", "--remOverlapping", dest="remOverlapping", action='store_true',
-                             help="Uniquely assign overlapping genes between significant cell types based on gene-celltype enrichment.")
+    #group_input.add_argument("-O", "--remOverlapping", dest="remOverlapping", action='store_true',
+    #                         help="Uniquely assign overlapping genes between significant cell types based on gene-celltype enrichment.")
     group_input.add_argument("-m", "--meanAsControl", dest="meanAsControl", action='store_true',
                              help="Instead of taking a reference sample, GCAM takes mean of all samples as reference.")
 

@@ -259,7 +259,7 @@ def stack_barplot(args, sigcelltype, path, name='_', method='genebased'):
         adjustment = 0.02
         plot_color = d_colors[:len(cells)]
         cell_type = list(sigcelltype.index)
-        print cell_type
+        #print cell_type
         #print sigcelltype
         stackplot_data.append(cells)
         #cols = [col for col in sigcelltype.columns if 'FC' in col]
@@ -563,7 +563,7 @@ def heatmap_Sigcelltype(df, path, edgecolors='w', log=False):
     fig, ax = plt.subplots(figsize=(20,10))#(figsize=(width,height))
     dfMax = max(df.max()) + max(df.max())/15
     dfSize = np.linspace(0, dfMax, num=15)
-    print dfSize
+    #print dfSize
     cmap, norm = mcolors.from_levels_and_colors(dfSize, ['#3e7d00', '#579619', '#a2c57f', '#b4d099', '#c7dcb2',
                                                          '#d9e7cc', '#ecf3e5', '#ffffff', '#fae5e5', '#f5cccc',
                                                          '#f0b2b2', '#eb9999', '#e67f7f', '#d21919'] ) # ['MidnightBlue', Teal]['Darkgreen', 'Darkred']
