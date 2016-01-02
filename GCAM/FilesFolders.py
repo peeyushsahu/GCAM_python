@@ -84,8 +84,8 @@ def get_genes(path):
     f_genelist = list(set(geneList))
     print ('Size of user provided gene list:' + str(len(geneList)))
     print ('No. of genes after removing duplicates:' + str(len(f_genelist)))
-    if len(f_genelist) < 10:
-        raise IOError("Minimum gene requirement for the analysis is 10.")
+    if len(f_genelist) < 5:
+        raise IOError("Minimum gene requirement for the analysis is 5.")
     return f_genelist
 
 def key_celltypes(path):

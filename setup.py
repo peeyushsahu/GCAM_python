@@ -51,12 +51,12 @@ def main():
               'Programming Language :: Python',
           ],
           install_requires=[
-              'numpy==1.8.1',
+              'numpy',
               'matplotlib',
-              'pandas==0.16.1',
+              'pandas',
               'biopython',
               'scipy',
-              'scikit-learn==0.16.1',
+              'scikit-learn',
           ],
           )
 
