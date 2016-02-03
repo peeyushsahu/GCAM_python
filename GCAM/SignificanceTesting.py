@@ -24,7 +24,9 @@ class SignificanceObject():
         '''
         occurrencedf = self.occurrencedf
         transposedf = pd.DataFrame.transpose(occurrencedf)
+        #print transposedf.head()
         scaled_df = scale_dataframe(transposedf)
+        #print scaled_df.head()
         #print occurrencedf.index
         #print scaled_df
         scaled_df.columns = occurrencedf.index
@@ -69,11 +71,13 @@ class SignificanceObject():
             rowsum = v.sum()
             for i in range(0, v.shape[0]):
                 value = v[i]
+                #print 'colsum',occu_df[[i]].sum()[0]
                 if not value == 0:
                     colsum = occu_df[[i]].sum()[0] - value
                     rsum = rowsum - value
                     #print rowsum, value, colsum
-                    enrichment = scale(float(value), [min(v), max(v)], [0, 100])
+                    #enrichment = scale(float(value), [min(v), max(v)], [0, 100])
+                    enrichment = float(value)/occu_df[[i]].sum()[0]
                     if value != 0:
                         oddsratio, pval = stats.fisher_exact([[value, rsum], [colsum, matsum-(value+rsum+colsum)]])
                     else:
@@ -104,7 +108,7 @@ class SignificanceObject():
                 if pval < significance:
                     cellgenedf = cellgenedf.append(pd.Series([celltype, gene, enrichmentdf.loc[celltype, gene], pval,
                                                          self.adjpvaldf.loc[celltype, gene]]), ignore_index=True)
-        #print cellgenedf
+        #print cellgenedf.head(10)
         cellgenedf.columns = column
         self.cellgenedf = cellgenedf
         #self.filter_cellgenedf()  # Filter single cell multigene enrihment
@@ -131,6 +135,7 @@ class SignificanceObject():
             else:
                 new_cellgenedf = new_cellgenedf.append(df)
             '''
+        #print new_cellgenedf
         self.cellgenedf = new_cellgenedf
 
 
@@ -143,20 +148,21 @@ class SignificanceObject():
         #print self.cellgenedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
         cellgenedf = self.cellgenedf
-        c = len(cellgenedf[cellgenedf['enrichment'] > 1])
+        c = len(cellgenedf[cellgenedf['enrichment'] > 0.05])
         d = len(cellgenedf) #[cellgenedf['P-val'] < 0.5]
         for celltype, val in cellgroup:
             #print celltype
-            #print val
-            a = len(val[val['enrichment'] > 1])
-            b = len(val) - a
-            cc = c - a
-            dd = d - (a+b+cc)
-            #print a, ':', b, ':', cc, ':', dd, c, d
-            if a > 0:
-                oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
-                #print 'celltype:'+celltype, p
-                sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True)
+            if len(val[val['enrichment'] >= 0.1]) > 1:
+                #print val
+                a = len(val[val['enrichment'] >= 0.1])
+                b = len(val) - a
+                cc = c - a
+                dd = d - (a+b+cc)
+                #print a, ':', b, ':', cc, ':', dd, c, d
+                if a > 0:
+                    oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
+                    #print 'celltype:'+celltype, a, p
+                    sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True)
         sigcelltype.columns = ['celltype', 'genecluster', 'p-val']
         length = len(sigcelltype[sigcelltype['p-val'] < 0.05])
         # Significant celltype check
@@ -192,6 +198,7 @@ def scale_dataframe(df):
     list_of_rows = []
     #print 'Process: scaling of dataframe'
     for r, v in df.iterrows():
+        #print v.sum()
         rows = []
         for val in v:
             #print val
@@ -200,5 +207,6 @@ def scale_dataframe(df):
             if not isinstance(val, str):
                 #print val
                 rows.append(scale(val, (old_min, old_max), (new_min, new_max)))
+                #rows.append(float(val)/v.sum())
         list_of_rows.append(rows)
     return pd.DataFrame(data=list_of_rows)
