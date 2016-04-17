@@ -115,13 +115,10 @@ def add_expressionbased_parser(parser):
                              help="Lowest number of genes associated for celltype fraction analysis.")
     group_input.add_argument("-n", "--numiteration", type=int, default=100, dest="somiter",
                              help="Number of iteration performed for SOM clustering.")
-    group_input.add_argument("-R", "--regCoffi", type=str, default='nuSVR-one2one', dest="regMethod", choices=['nuSVR', 'one2all', 'one2one'],
-                             help="Define the method to find celltype fraction.")
     group_input.add_argument("--selectCelltypes", type=str, default=None, dest="selectCelltypes",
                              help="Comma separated list of celltypes, to remove their effects from celltype-fraction analysis. Max:26")
-
-    #group_input.add_argument("-O", "--remOverlapping", dest="remOverlapping", action='store_true',
-    #                         help="Uniquely assign overlapping genes between significant cell types based on gene-celltype enrichment.")
+    group_input.add_argument("-k", "--keycelltype",dest="key_celltype_list", action='store_true',
+                             help="This will calculate the enrichment of data for the selected key cell-types.")
     group_input.add_argument("-m", "--meanAsControl", dest="meanAsControl", action='store_true',
                              help="Instead of taking a reference sample, GCAM takes mean of all samples as reference.")
 

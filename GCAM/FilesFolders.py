@@ -162,6 +162,20 @@ def read_previous_occurrence_table(resource_path):
     return gene_occu_db, True
 
 
+def read_binom_prob(resource_path):
+    '''
+    This will read the occurrence database for already analysed genes to save time.
+    :param resource_path:
+    :return:
+    '''
+    try:
+        print ('binomial probability calculation...')
+        cell_binom = read_csv(os.path.join(resource_path, 'cellType_binom_prob.txt'), header=0, sep="\t")
+    except:
+        raise ValueError('Binomial probabilities not found')
+    return cell_binom
+
+
 def read_pheno_data(path):
     '''
     Reads pheno-data for analysis

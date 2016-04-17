@@ -252,8 +252,8 @@ def stack_barplot(args, sigcelltype, path, name='_', method='genebased'):
         d_labels.insert(0, 'sample')
         d_widths.insert(0, 0.5)
 
-    if not args.selectCelltypes is None and method == 'exprbased':
-        if len(sigcelltype) > 15: sigcelltype = sigcelltype[:15]
+    if not args.key_celltype_list and method == 'exprbased':
+        #if len(sigcelltype) > 15: sigcelltype = sigcelltype[:15]
         cells = [1.0]*len(sigcelltype)
         number_label = float(len(sigcelltype))
         adjustment = 0.02
@@ -527,7 +527,7 @@ def plot_celltypesignificance(path, plotdf, args):
             xytext=(0,15), textcoords='offset points',
             ha='center', va='bottom',
             bbox=dict(boxstyle='round, pad=0.2', fc='yellow', alpha=0.2),
-            fontsize=8)
+            fontsize=10)
 ## plot legend
     l1 = plt.scatter([],[], s=50, c='gray', alpha=0.5)
     l2 = plt.scatter([],[], s=200, c='gray', alpha=0.5)
@@ -557,6 +557,8 @@ def heatmap_Sigcelltype(df, path, edgecolors='w', log=False):
     '''
     import matplotlib.colors as mcolors
     import numpy as np
+    import matplotlib.pyplot as plt
+
     width = len(df.columns)/7*10
     height = len(df.index)/7*10
 
@@ -597,3 +599,11 @@ def heatmap_Sigcelltype(df, path, edgecolors='w', log=False):
     plt.tight_layout()
     plt.savefig(os.path.join(path, 'GCAM_heatmap_SigCelltype.svg'))
     plt.clf()
+    ## seaborn heatmap
+    import seaborn as sns
+    sns.set()
+    plt.figure(figsize=(15, 20))
+    g = sns.heatmap(df, vmin=0, annot=True, cmap="YlGnBu")
+    plt.savefig(os.path.join(path, 'GCAM_heatmap_SigCelltype_sns.svg'))
+    plt.clf()
+    plt.close()

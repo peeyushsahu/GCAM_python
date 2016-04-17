@@ -5,18 +5,21 @@ import scipy.stats as stats
 import os
 
 
+
 class SignificanceObject():
     '''
     This Object will hold dataframes used and created in analysis
     '''
-    def __init__(self, occurrencedf, heatmapdf=None):
+    def __init__(self, occurrencedf, binom_prob, heatmapdf=None):
         self.occurrencedf = occurrencedf
+        self.binom_prob = binom_prob
         self.heatmapdf = heatmapdf
         self.filheatmapdf = None
         self.pvaldf = None
         self.adjpvaldf = None
         self.cellgenedf = None
         self.sigCelltypedf = None
+        self.binom_pval_df = None
 
     def heatmapdf_create(self):
         '''
@@ -53,6 +56,33 @@ class SignificanceObject():
         hclustHeatmap.frame = self.filheatmapdf
         hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.svg'])
         fig, axm, axcb, cb = hclustHeatmap.plot()
+        '''
+        ## seaborn heatmap
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        sns.set()
+        plt.figure(figsize=(20, 20))
+        g = sns.clustermap(self.filheatmapdf, vmax=100, vmin=0)
+        plt.savefig(os.path.join(path, 'GCAM_heatmap_sns.svg'))
+        plt.clf()
+        plt.close()
+        '''
+
+
+    def filter_occuDf(self):
+        '''
+        Filter occurrence df for removing gene wid less than 5 celltype tags
+        :return:
+        '''
+        occuDf = self.occurrencedf
+        Columns=[]
+        for k, v in occuDf.iteritems():
+            #print k, v.sum()
+            if v.sum() < 5:
+                Columns.append(k)
+        print(len(Columns))
+        self.occurrencedf = occuDf.drop(Columns, axis=1)
+        print(self.occurrencedf.shape)
 
 
     def fisher_occurrence_test(self):
@@ -60,8 +90,11 @@ class SignificanceObject():
         This method will calculate significance of celltypes per gene using their occurrence.
         Statistical test used is Fisher Exact Test
         '''
+        self.filter_occuDf()
         occu_df = self.occurrencedf
+        binom_prob = self.binom_prob
         pvaldf = pd.DataFrame()
+        binom_pvaldf = pd.DataFrame()
         adjpvaldf = pd.DataFrame()
         enrichmentdf = pd.DataFrame()
         matsum = occu_df.sum().sum()
@@ -71,39 +104,61 @@ class SignificanceObject():
             rowsum = v.sum()
             for i in range(0, v.shape[0]):
                 value = v[i]
-                #print 'colsum',occu_df[[i]].sum()[0]
                 if not value == 0:
                     colsum = occu_df[[i]].sum()[0] - value
                     rsum = rowsum - value
                     #print rowsum, value, colsum
-                    #enrichment = scale(float(value), [min(v), max(v)], [0, 100])
                     enrichment = float(value)/occu_df[[i]].sum()[0]
                     if value != 0:
-                        oddsratio, pval = stats.fisher_exact([[value, rsum], [colsum, matsum-(value+rsum+colsum)]])
+                        ## Fisher p-value is calcualted but not put in the table
+                        oddsratio, pval = stats.fisher_exact([[value, colsum], [rsum, matsum-(value+rsum+colsum)]],
+                                                             alternative='greater')
+                        celltype = k
+                        index = binom_prob[binom_prob['celltype'] == celltype].index.tolist()
+                        b_pval = stats.binom.sf(value, colsum+value, binom_prob.iloc[index[0], 3])
+
                     else:
                         pval = 1
+                        b_pval = 1
                     pvaldf.loc[k, key[i]] = pval
+                    binom_pvaldf.loc[k, key[i]] = b_pval
                     enrichmentdf.loc[k, key[i]] = enrichment
-                    if pval < 0.05/v.shape[0]:
-                        adjpvaldf.loc[k, key[i]] = pval*v.shape[0]
+                else:
+                    binom_pvaldf.loc[k, key[i]] = 1
+                    pvaldf.loc[k, key[i]] = 1
+                    enrichmentdf.loc[k, key[i]] = 0
+        ## adj p-val calcualtion
+        #print(binom_pvaldf.head())
+        for k, v in binom_pvaldf.iterrows():
+            for i in range(0, v.shape[0]):
+                key = v.keys()
+                value = v[i]
+                if value != 1:
+                    #print(key[i])
+                    #print(len(binom_pvaldf[binom_pvaldf[key[i]] < 0.05]))
+                    sigCelltype = len(binom_pvaldf[binom_pvaldf[key[i]] < 0.05])
+                    #print(sigCelltype)
+                    if value < 0.05/sigCelltype:
+                        adjpvaldf.loc[k, key[i]] = value*sigCelltype
                     else:
                         adjpvaldf.loc[k, key[i]] = 1
                 else:
-                    pvaldf.loc[k, key[i]] = 1
                     adjpvaldf.loc[k, key[i]] = 1
-                    enrichmentdf.loc[k, key[i]] = 0
+        #print binom_pvaldf
+        self.binom_pval_df = binom_pvaldf
         self.pvaldf = pvaldf
         self.adjpvaldf = adjpvaldf
         self.celltype_overrepresntation_list(enrichmentdf)  #### def()
+
 
     def celltype_overrepresntation_list(self, enrichmentdf):
         '''
         This method will save the result of significance in one DF.
         '''
         significance = 1
-        column = ['celltype', 'gene', 'enrichment', 'p-val', 'q-val']
+        column = ['celltype', 'gene', 'enrichment', 'p-val', 'FDR']
         cellgenedf = pd.DataFrame()
-        for celltype, v in self.pvaldf.iterrows():
+        for celltype, v in self.binom_pval_df.iterrows():
             for gene, pval in v.iteritems():
                 if pval < significance:
                     cellgenedf = cellgenedf.append(pd.Series([celltype, gene, enrichmentdf.loc[celltype, gene], pval,
@@ -122,10 +177,11 @@ class SignificanceObject():
         new_cellgenedf = pd.DataFrame(columns=self.cellgenedf.columns)
         siggenes = group_cellgene.groups
         for gene in siggenes:
-            df = group_cellgene.get_group(gene).sort('enrichment', ascending=False)
+            #df = group_cellgene.get_group(gene).sort('enrichment', ascending=False)
+            df = group_cellgene.get_group(gene).sort('p-val', ascending=True)
             for ind, row in df.iterrows():
                 #print ind, row
-                if row['enrichment'] > 0.05 or row['p-val'] < 0.05:
+                if(row['enrichment'] > 0.05) | (row['p-val'] < 0.05):
                     new_cellgenedf = new_cellgenedf.append(row)
             '''
             if len(df) > 2:
@@ -148,31 +204,32 @@ class SignificanceObject():
         #print self.cellgenedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
         cellgenedf = self.cellgenedf
-        c = len(cellgenedf[cellgenedf['enrichment'] > 0.05])
+        c = len(cellgenedf[cellgenedf['p-val'] <= 0.05])
         d = len(cellgenedf) #[cellgenedf['P-val'] < 0.5]
+        print(c,d)
         for celltype, val in cellgroup:
             #print celltype
-            if len(val[val['enrichment'] >= 0.1]) > 1:
+            if len(val[val['p-val'] <= 0.05]) > 1:
                 #print val
-                a = len(val[val['enrichment'] >= 0.1])
+                a = len(val[val['p-val'] <= 0.001])
                 b = len(val) - a
                 cc = c - a
                 dd = d - (a+b+cc)
                 #print a, ':', b, ':', cc, ':', dd, c, d
-                if a > 0:
-                    oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
-                    #print 'celltype:'+celltype, a, p
-                    sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True)
+                oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
+                #print 'celltype:'+celltype, a, p
+                sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True)
         sigcelltype.columns = ['celltype', 'genecluster', 'p-val']
-        length = len(sigcelltype[sigcelltype['p-val'] < 0.05])
+        length = len(sigcelltype[sigcelltype['p-val'] <= 0.05])
         # Significant celltype check
         if length < 1:
             raise ValueError('No siginificant celltypes.')
 
         for k, v in sigcelltype.iterrows():
             if v['p-val'] < 0.05/length:
-                sigcelltype.loc[k, 'q-val'] = v['p-val']*length
-            else:sigcelltype.loc[k, 'q-val'] = 1
+                sigcelltype.loc[k, 'FDR'] = v['p-val']*length
+            else:
+                sigcelltype.loc[k, 'FDR'] = 1
         self.sigCelltypedf = sigcelltype
 
 

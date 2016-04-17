@@ -52,7 +52,13 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
     nof_nuron_cluster = set(neurons)
     df_dict = {i:pd.DataFrame() for i in nof_nuron_cluster}
     #print 'Number of neurons occupied', len(df_dict)
+    rotation = ['|', '/', '-', '\\']
+    i=0
     for ind in range(0, len(neurons)):
+        sys.stdout.write("\rSelecting differential genes %s" % rotation[i])
+        sys.stdout.flush()
+        if i == 3: i=0
+        else:i+=1
         df_dict[neurons[ind]] = df_dict[neurons[ind]].append(normnewDataDF.iloc[ind], ignore_index=True)
     geneList = []
     dfGene = 2001
@@ -81,7 +87,7 @@ def cluster_choose(df_dict, path, foldDifference=2):
             for name in df_dict.get(key)['Symbol']:
                 if not str(name).lower() == 'nan':
                     gene_names.append(str(name).lower())
-    print('Genes are selected for analysis:', len(gene_names))
+    print('Genes are selected for analysis:', str(len(gene_names)))
     if len(gene_names) < 50:
         raise ValueError("Not enough differential genes.")
     return gene_names
@@ -115,7 +121,7 @@ def clusterplot(df_dict, path):
 
 def find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clustersize, args):
     '''
-    This function will give common significant genes from each celltype by camparing diggerent celltype classes.
+    This function will give common significant genes from each celltype by camparing different celltype classes.
     to one celltype.
     :param significanceDF:
     :return:
@@ -131,7 +137,6 @@ def find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clustersize, args):
     sigGene_group = sigGene.groupby('celltype')
     combination = []
     genelist4expr = {}
-    #sigGene_group.get_group('alveolar macrophage').head(2)
     for cell, df in sigGene_group:
         if cell in cellType:
             #print cell, len(df)
@@ -148,7 +153,35 @@ def find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clustersize, args):
     for k, v in genelist4expr.iteritems():
         genelist4expr[k] = list(set(v))
     #print genelist4expr
-    return find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clustersize, args)
+    return geneList4expr(sigCelltypedf, cellgenedf, clustersize, args)
+    #return find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clustersize, args)
+
+
+def geneList4expr(sigCelltypedf, cellgenedf, clustersize, args):
+    sigCelltype = sigCelltypedf
+    sigGene = cellgenedf
+    cellType = []
+    sigCelltype = sigCelltype.sort('p-val', ascending=True)
+    for k, v in sigCelltype.iterrows():
+        if v['genecluster'] > clustersize: # and v['p-val'] <= 0.05
+            cellType.append(v['celltype'])
+    genelist4expr = dict((k, []) for k in cellType)
+    sigGene_group = sigGene.groupby('gene')
+    for gene, df in sigGene_group:
+        df = df.sort('p-val', ascending=True)
+        for k, v in df.iterrows():
+            if v['celltype'] in cellType:
+                genelist4expr[v['celltype']].append(v['gene'])
+                break
+    print(args.outdir)
+    myfile = open(os.path.join(args.outdir, 'celltypeSign_new.txt'), 'w')
+    myfile.write('celltype'+'\t'+'genes')
+    for k, v in genelist4expr.iteritems():
+        myfile.write('\n'+k+'\t'+','.join(v))
+    myfile.close()
+    return genelist4expr
+
+
 
 
 def find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clusterSize, args):
@@ -194,6 +227,11 @@ def find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clust
     print("Genes/celltype after filtering:")
     #for key, cell in dict4sortedGenes.iteritems():
         #print(key, len(cell))
+    myfile = open(os.path.join(args.outdir, 'celltypeSign_old.txt'), 'w')
+    myfile.write('celltype'+'\t'+'genes')
+    for k, v in dict4sortedGenes.iteritems():
+        myfile.write('\n'+k+'\t'+','.join(v))
+    myfile.close()
     return dict4sortedGenes
 
 
@@ -241,28 +279,13 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
             #print expr
     if len(expr) == 0:
         raise ValueError("No significant gene for fraction comparison.")
-    '''
-    else:
-        gene2cell_group = cellgenedf.groupby('celltype')
-        for k, v in sigCelltypedf.iterrows():
-            if v['genecluster'] > clusterSize:
-                cellexpr_dict = {}
-                df = gene2cell_group.get_group(v['celltype'])
-                for i in pheno:
-                    geneexpr_dict = {}
-                    for key, val in df.iterrows():
-                        if val['p-val'] < 0.05:
-                            geneexpr_dict[val['gene']] = exprdata.loc[val['gene'], i]
-                    cellexpr_dict[i] = geneexpr_dict
-                expr[v['celltype']] = pd.DataFrame(cellexpr_dict)
-    '''
     if args.controlsample is None:
         print("mean as control.")
-        return mean_coffi4exprdf(expr, path, args, method = args.regMethod)
-    return coffi4exprdf(expr, path, args, control=control, method = args.regMethod)
+        return mean_coffi4exprdf(expr, path, args)
+    return coffi4exprdf(expr, path, args, control=control)
 
 
-def coffi4exprdf(expr, path, args, control=None, method='nuSVR'):
+def coffi4exprdf(expr, path, args, control=None):
     '''
     Calculate cofficient and prepare dataframe for ploting.
     '''
@@ -276,43 +299,13 @@ def coffi4exprdf(expr, path, args, control=None, method='nuSVR'):
                 con.append(cont)
         break
     #print(control, con)
-    '''
+    print('Using nuSVR.....')
     for cell in expr.keys():
-        plotDataframe.loc[cell, 'Reference_%'] = 1#*scaleSig.loc[cell,'genecluster_scale']
-    '''
-    if method == 'one2all':
-        print ('Using Multivariate regression.....')
-        formula = control + ' ~ ' + ' + '.join(con)
-        #print formula
-        for cell in expr.keys():
-            #print expr.get(cell)
-            #print formula
-            lm = smf.rlm(formula=formula, data=expr.get(cell)).fit()
-            #print lm.params
-            for samp, coff in lm.params.iteritems():
-                #print cell, samp, coff, scaleSig.loc[cell,'genecluster_scale']
-                if coff < 0: coff = 0
-                if not samp == 'Intercept':
-                    plotDataframe.loc[cell, samp+'_vs_'+control] = coff
-
-    if method == 'one2one':
-        print('Using Univeriate regression.....')
-        for cell in expr.keys():
-            for condition in con:
-                formula = control + ' ~ ' + condition
-                #print formula
-                lm = smf.rlm(formula=formula, data=expr.get(cell)).fit()
-                coffi = lm.params[condition]
-                if lm.params[condition] < 0: coffi = 0
-                plotDataframe.loc[cell, condition+'_vs_'+control] = coffi  # plotDataframe.T
-    '''
-    if method == 'nuSVR-one2all':
-        print('Using nu-Support Vector Regression.....')
-        for cell in expr.keys():
-            data = expr.get(cell)
-            target = data[control]
-            trainingdf = data[con]
-            #print trainingdf
+        data = expr.get(cell)
+        target = data[control]
+        #print con
+        for col in con:
+            trainingdf = data[[col]]
             rsqr=0; nu=0.50
             for NU in [0.25, 0.50, 0.75]:
                 clf = NuSVR(C=1.0, kernel='linear', nu=NU)
@@ -325,120 +318,60 @@ def coffi4exprdf(expr, path, args, control=None, method='nuSVR'):
             clf = NuSVR(C=1.0, kernel='linear', nu=nu)
             svf = clf.fit(trainingdf, target)
             coffi = svf.coef_
-            #print 'Fit: ', coffi, 'rSqrd', rSqrd
-            #print con
-            for sample in con:
-                coffInd = con.index(sample)
-                coff = coffi[0][coffInd]
-                if coff < 0: coff = 0
-                plotDataframe.loc[cell, sample+'_vs_'+control] = coff #* scaleSig.loc[cell,'genecluster_scale']
-    '''
-    if method == 'nuSVR':
-        print('Using nuSVR.....')
-        for cell in expr.keys():
-            data = expr.get(cell)
-            target = data[control]
-            #print con
-            for col in con:
-                trainingdf = data[[col]]
-                rsqr=0; nu=0.50
-                for NU in [0.25, 0.50, 0.75]:
-                    clf = NuSVR(C=1.0, kernel='linear', nu=NU)
-                    clf.fit(trainingdf, target)
-                    rSqrd = clf.score(trainingdf,target)
-                    if rsqr < rSqrd:
-                        rsqr = rSqrd
-                        nu = NU
-                #print ('nu parameter:',nu)
-                clf = NuSVR(C=1.0, kernel='linear', nu=nu)
-                svf = clf.fit(trainingdf, target)
-                coffi = svf.coef_
-                if coffi < 0: coffi = 0
-                plotDataframe.loc[cell, col+'_vs_'+control] = coffi #* scaleSig.loc[cell,'genecluster_scale']
+            if coffi < 0: coffi = 0
+            plotDataframe.loc[cell, col+'_vs_'+control] = coffi #* scaleSig.loc[cell,'genecluster_scale']
     #print plotDataframe
     if not path is None:
         plotDataframe.to_csv(os.path.join(path, 'GCAM_cellexpr_sig.txt'), sep='\t')
         for column in plotDataframe.columns:
             plotDataframe.loc[:,column] = (plotDataframe.loc[:,column]/sum(plotDataframe.loc[:,column]))
-            #plotDataframe.loc[:,column] = (plotDataframe.loc[:,column]+abs(plotDataframe.loc[:,column].mean()))
-        #plotDataframe.to_csv(os.path.join(path,control+'GCAM_cellexpr_sig.txt'), sep='\t')
     ## plotting stacked bar plot
     plots.heatmap_Sigcelltype(plotDataframe.T, path)
     plots.stack_barplot(args, plotDataframe, path, name=control, method='exprbased')
     #return plotDataframe
 
-def mean_coffi4exprdf(expr, path, args, method='nuSVR'):
+def mean_coffi4exprdf(expr, path, args):
     '''
     Calculate cofficient and prepare dataframe for ploting.
     '''
     from sklearn.svm import NuSVR
-    if not method in ['nuSVR', 'nuSVR-one2one']:
-        raise ValueError("Reference as mean only support nSVR, nuSVR-one2one.")
     con = []
     plotDataframe = pd.DataFrame(index=expr.keys())
     for sample in expr.keys():
         for cont in expr.get(sample).columns:
             con.append(cont)
         break
-    '''
-    if method == 'nuSVR':
-        print('Using nu-Support Vector Regression.....')
-        for cell in expr.keys():
-            data = expr.get(cell)
-            target = data.sum(axis=1)
-            #data.to_csv(os.path.join(path, 'GCAM_reg_exprdata.txt'), sep='\t')
-            trainingdf = data[con]
+    print('nuSVR.....')
+    for cell in expr.keys():
+        #print(cell)
+        data = expr.get(cell)
+        target = data.sum(axis=1)
+        #data.to_csv(os.path.join(path, 'GCAM_reg_exprdata.txt'), sep='\t')
+        for col in con:
+            trainingdf = data[[col]]
             rsqr=0; nu=0.50
             for NU in [0.25, 0.50, 0.75]:
                 clf = NuSVR(C=1.0, kernel='linear', nu=NU)
                 clf.fit(trainingdf, target)
                 rSqrd = clf.score(trainingdf,target)
+                #print("Value of nu:", NU," rSqrd: ", rSqrd)
                 if rsqr < rSqrd:
                     rsqr = rSqrd
                     nu = NU
+            #print ('nu parameter:',nu)
             clf = NuSVR(C=1.0, kernel='linear', nu=nu)
             svf = clf.fit(trainingdf, target)
             coffi = svf.coef_
-            for sample in con:
-                coffInd = con.index(sample)
-                coff = coffi[0][coffInd]
-                if coff < 0: coff = 0
-                plotDataframe.loc[cell, sample] = coff # scaleSig.loc[cell,'genecluster_scale']
-    '''
-    if method == 'nuSVR':
-        print('Using nuSVR.....')
-        for cell in expr.keys():
-            #print(cell)
-            data = expr.get(cell)
-            target = data.sum(axis=1)
-            #data.to_csv(os.path.join(path, 'GCAM_reg_exprdata.txt'), sep='\t')
-            for col in con:
-                trainingdf = data[[col]]
-                rsqr=0; nu=0.50
-                for NU in [0.25, 0.50, 0.75]:
-                    clf = NuSVR(C=1.0, kernel='linear', nu=NU)
-                    clf.fit(trainingdf, target)
-                    rSqrd = clf.score(trainingdf,target)
-                    #print("Value of nu:", NU," rSqrd: ", rSqrd)
-                    if rsqr < rSqrd:
-                        rsqr = rSqrd
-                        nu = NU
-                #print ('nu parameter:',nu)
-                clf = NuSVR(C=1.0, kernel='linear', nu=nu)
-                svf = clf.fit(trainingdf, target)
-                coffi = svf.coef_
-                if coffi < 0 or rsqr < 0: coffi = 0
-                plotDataframe.loc[cell, col] = coffi #* scaleSig.loc[cell,'genecluster_scale']
-            df2exprsig = pd.concat([target, data], axis=1)
-            #df2exprsig.to_csv(os.path.join(path, cell+'GCAM_cellexpr_sig.txt'), sep='\t')
+            if coffi < 0 or rsqr < 0: coffi = 0
+            plotDataframe.loc[cell, col] = coffi #* scaleSig.loc[cell,'genecluster_scale']
+        df2exprsig = pd.concat([target, data], axis=1)
+        #df2exprsig.to_csv(os.path.join(path, cell+'GCAM_cellexpr_sig.txt'), sep='\t')
 
-    #print plotDataframe
+    print plotDataframe
     if not path is None:
         plotDataframe.to_csv(os.path.join(path, 'GCAM_cellexpr_sig.txt'), sep='\t')
         for column in plotDataframe.columns:
             plotDataframe.loc[:,column] = (plotDataframe.loc[:,column]/sum(plotDataframe.loc[:,column]))
-            #plotDataframe.loc[:,column] = (plotDataframe.loc[:,column]+abs(plotDataframe.loc[:,column].mean()))
-        #plotDataframe.to_csv(os.path.join(path, 'GCAM_cellexpr_sig.txt'), sep='\t')
     ## plotting stacked bar plot
     plots.heatmap_Sigcelltype(plotDataframe.T, path)
     plots.stack_barplot(args, plotDataframe, path, name='_', method='exprbased')
