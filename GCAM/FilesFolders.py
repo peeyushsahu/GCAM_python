@@ -20,6 +20,7 @@ def create_folders(path):
     npath = os.path.join(path, 'GCAM_output_'+str(time.strftime("%d_%m_%Y"))+'_'+str(time.strftime("%H_%M_%S")))
     if not os.path.exists(npath):
         os.makedirs(npath)
+        os.chmod(npath, 777)
         #os.chmod(npath, mode=777)
     return npath
 

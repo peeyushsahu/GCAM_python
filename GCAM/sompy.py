@@ -89,8 +89,8 @@ class SOM(object):
             elif len(mapsize) == 1:
                 s =  int (mapsize[0]/2)
                 self.mapsize = [1 ,mapsize[0]]
-                print 'input was considered as the numbers of nodes'
-                print 'map size is [{0},{1}]'.format(s,s)
+                #print 'input was considered as the numbers of nodes'
+                #print 'map size is [{0},{1}]'.format(s,s)
             self.nnodes = self.mapsize[0]*self.mapsize[1]
 
         # to set component names
@@ -102,17 +102,17 @@ class SOM(object):
                     self.compname = np.asarray(cc)[np.newaxis,:]
             except:
                 pass
-                print 'no data yet: plesae first set trainign data to the SOM'
+                #print 'no data yet: plesae first set trainign data to the SOM'
         else:
             try:
                 dim =  getattr(self,'dim')
                 if  len(compname) == dim:
                     self.compname = np.asarray(compname)[np.newaxis,:]
                 else:
-                    print 'compname should have the same size'
+                    print('compname should have the same size')
             except:
                 pass
-                print 'no data yet: plesae first set trainign data to the SOM'
+                #print 'no data yet: plesae first set trainign data to the SOM'
 
 
     #Set labels of the training data
@@ -127,7 +127,7 @@ class SOM(object):
                     self.dlabel = np.asarray(cc)[:, np.newaxis]
             except:
                 pass
-                print 'no data yet: plesae first set trainign data to the SOM'
+                #print 'no data yet: plesae first set trainign data to the SOM'
         else:
             try:
                 dlen =  (getattr(self,'dlen'))
@@ -138,10 +138,10 @@ class SOM(object):
                 elif dlabel.shape == (dlen,):
                     self.dlabel = dlabel[:, np.newaxis]
                 else:
-                    print 'wrong lable format'
+                    print('wrong lable format')
             except:
                 pass
-                print 'no data yet: plesae first set trainign data to the SOM'
+                #print 'no data yet: plesae first set trainign data to the SOM'
 
     #calculating the grid distance, which will be called during the training steps
     #currently just works for planar grids
@@ -175,11 +175,11 @@ class SOM(object):
         mapsize = getattr(self, 'mapsize')
         if np.min(mapsize) >1:
             if pack == 'No':
-                #print '1'
+                ##print '1'
                 view_2d(self, text_size, which_dim = which_dim, what = what)
             else:
-                #print '2'
-                #print save_dir
+                ##print '2'
+                ##print save_dir
                 view_2d_Pack(self, text_size, which_dim = which_dim,what = what,save = save, save_dir = save_dir, grid=grid,text=text,CMAP=cmap,col_sz=COL_SiZe)
 
         elif np.min(mapsize) == 1:
@@ -199,9 +199,9 @@ class SOM(object):
             codebooktmp = lininit(self) #it is based on two largest eigenvalues of correlation matrix
             setattr(self, 'codebook', codebooktmp)
         else:
-            print 'please select a corect initialization method'
-            print 'set a correct one in SOM. current SOM.initmethod:  ', getattr(self, 'initmethod')
-            print "possible init methods:'random', 'pca'"
+            print ('please select a corect initialization method')
+            print ('set a correct one in SOM. current SOM.initmethod:  ', getattr(self, 'initmethod'))
+            print ("possible init methods:'random', 'pca'")
 
 
     #Main loop of training
@@ -213,20 +213,20 @@ class SOM(object):
         dim = getattr(self, 'dim')
         mapsize = getattr(self, 'mapsize')
         mem = np.log10(dlen*nnodes*dim)
-        #print 'data len is %d and data dimension is %d' % (dlen, dim)
-        #print 'map size is %d, %d' %(mapsize[0], mapsize[1])
-        #print 'array size in log10 scale' , mem
-        #print 'nomber of jobs in parallel: ', n_job
+        ##print 'data len is %d and data dimension is %d' % (dlen, dim)
+        ##print 'map size is %d, %d' %(mapsize[0], mapsize[1])
+        ##print 'array size in log10 scale' , mem
+        ##print 'nomber of jobs in parallel: ', n_job
         #######################################
         #initialization
         if verbose=='on':
             print
-            print 'initialization method = %s, initializing..' %getattr(self, 'initmethod')
+            print('initialization method = %s, initializing..' %getattr(self, 'initmethod'))
             print
             t0 = time()
         self.init_map()
         if verbose=='on':
-            print 'initialization done in %f seconds' % round(time()-t0 , 3 )
+            print('initialization done in %f seconds' % round(time()-t0 , 3 ))
 
         ########################################
         #rough training
@@ -243,18 +243,18 @@ class SOM(object):
         err = np.mean(getattr(self, 'bmu')[1])
         if verbose=='on':
 #         or verbose == 'off':
-#             print
+#             #print
             ts = round(time() - t0, 3)
-            print
-            print ("Total time elapsed: %f secodns" %ts)
-            print ("final quantization error: %f" %err)
+            #print
+            #print ("Total time elapsed: %f secodns" %ts)
+            #print ("final quantization error: %f" %err)
         if verbose=='final':
 #         or verbose == 'off':
-#             print
+#             #print
             ts = round(time() - t0, 3)
-            print
-            print ("Total time elapsed: %f secodns" %ts)
-            print ("final quantization error: %f" %err)
+            #print
+            #print ("Total time elapsed: %f secodns" %ts)
+            #print ("final quantization error: %f" %err)
 
     #to project a data set to a trained SOM and find the index of bmu
     #It is based on nearest neighborhood search module of scikitlearn, but it is not that fast.
@@ -271,7 +271,7 @@ class SOM(object):
         #data = normalize(data, method='var')
         #plt.hist(data[:,2])
         Predicted_labels = clf.predict(data)
-        #print Predicted_labels[:10]
+        ##print Predicted_labels[:10]
         return Predicted_labels
 
 
@@ -366,7 +366,7 @@ class SOM(object):
 
     def hit_map(self, path, data=None):
         #First Step: show the hitmap of all the training data
-    #     	print 'None'
+    #     	#print 'None'
         data_tr = getattr(self, 'data_raw')
         proj = self.project_data(data_tr)
         msz = getattr(self, 'mapsize')
@@ -499,9 +499,9 @@ class SOM(object):
     def hit_map_cluster_number(self, path, data=None):
         if hasattr(self, 'cluster_labels'):
             codebook = getattr(self, 'cluster_labels')
-            #print 'yesyy'
+            ##print 'yesyy'
         else:
-            print('clustering expression dataset...')
+            #print('clustering expression dataset...')
             codebook = self.cluster()
         msz = getattr(self, 'mapsize')
         fig = plt.figure(figsize=(msz[1]/2.5, msz[0]/2.5))
@@ -524,7 +524,7 @@ class SOM(object):
             y = np.arange(.5,msz[0]+.5,1)
             cents = self.ind_to_xy(proj)
         #     		cents[:,1] = cents[:,1]+.2
-        #     		print cents.shape
+        #     		#print cents.shape
             label = codebook[proj]
             for i, txt in enumerate(label):
                 ax.annotate(txt, (cents[i,1],cents[i,0]),size=10, va="center")
@@ -569,8 +569,8 @@ class SOM(object):
                 #the patterns of each data records in time.
                 mn = np.min(data[:,:],axis=1)
                 mx = np.max(data[:,:],axis=1)
-    # 				print mx.shape
-    # 				print coords.shape
+    # 				#print mx.shape
+    # 				#print coords.shape
                 for j in range(data.shape[0]):
                     sc = plt.scatter(coords[j,1],self.mapsize[0]-1-coords[j,0],c=data[j,which_dim[i]],vmax=mx[j],vmin=mn[j],s=90,marker='.',edgecolor='None', cmap=colormap ,alpha=1)
 
@@ -602,8 +602,8 @@ class SOM(object):
                 plt.subplot(rows,cols,i+1)
                 mn = np.min(data[:,:],axis=1)
                 mx = np.max(data[:,:],axis=1)
-    # 				print mx.shape
-    # 				print coords.shape
+    # 				#print mx.shape
+    # 				#print coords.shape
                 for j in range(data.shape[0]):
                     sc = plt.scatter(coords[j,1],self.mapsize[0]-1-coords[j,0],c=data[j,which_dim[i]],vmax=mx[j],vmin=mn[j],s=90,marker='.',edgecolor='None', cmap=colormap ,alpha=1)
 
@@ -632,7 +632,7 @@ class SOM(object):
                 fig.savefig(save_dir, transparent=False, dpi=200)
             else:
                 add = '/Users/itadmin/Desktop/SOM_dot.png'
-                print('save directory: ', add)
+                #print('save directory: ', add)
                 fig.savefig(add, transparent=False, dpi=200)
 
             plt.close(fig)
@@ -716,12 +716,12 @@ class SOM(object):
         t_temp  = time()
         b  = Parallel(n_jobs=njb, pre_dispatch='3*n_jobs')(delayed(chunk_based_bmu_find)\
         (self, x[i*dlen // njb:min((i+1)*dlen // njb, dlen)],y, Y2) \
-        for i in xrange(njb))
+        for i in range(njb))
 
-        #print 'bmu finding: %f seconds ' %round(time() - t_temp, 3)
+        ##print 'bmu finding: %f seconds ' %round(time() - t_temp, 3)
         t1 = time()
         bmu = np.asarray(list(itertools.chain(*b))).T
-        #print 'bmu to array: %f seconds' %round(time() - t1, 3)
+        ##print 'bmu to array: %f seconds' %round(time() - t1, 3)
         del b
         return bmu
 
@@ -735,7 +735,7 @@ class SOM(object):
         dim = getattr(self, 'dim')
         New_Codebook = np.empty((nnodes, dim))
         inds = bmu[0].astype(int)
-#         print 'bmu', bmu[0]
+#         #print 'bmu', bmu[0]
 #         fig = plt.hist(bmu[0],bins=100)
 #         plt.show()
         row = inds
@@ -748,24 +748,24 @@ class SOM(object):
         #assert( H.shape == (nnodes, nnodes))
 
         # H has nnodes*nnodes and S has nnodes*dim  ---> Nominator has nnodes*dim
-        #print Nom
+        ##print Nom
         Nom = np.empty((nnodes,nnodes))
         Nom =  H.T.dot(S)
         #assert( Nom.shape == (nnodes, dim))
         nV = np.empty((1,nnodes))
         nV = P.sum(axis = 1).reshape(1, nnodes)
-#         print 'nV', nV
-#         print 'H'
-#         print  H
+#         #print 'nV', nV
+#         #print 'H'
+#         #print  H
         #assert(nV.shape == (1, nnodes))
         Denom = np.empty((nnodes,1))
         Denom = nV.dot(H.T).reshape(nnodes, 1)
-#         print 'Denom'
-#         print  Denom
+#         #print 'Denom'
+#         #print  Denom
         #assert( Denom.shape == (nnodes, 1))
         New_Codebook = np.divide(Nom, Denom)
-#         print 'codebook'
-#         print New_Codebook.sum(axis=1)
+#         #print 'codebook'
+#         #print New_Codebook.sum(axis=1)
         Nom = None
         Denom = None
         #assert (New_Codebook.shape == (nnodes,dim))
@@ -826,7 +826,7 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
     if phase == 'rough':
         #training length
         #trainlen = int(np.ceil(30*mpd))
-        #print('Nos of iteration',trainlen)
+        ##print('Nos of iteration',trainlen)
         #radius for updating
         if initmethod == 'random':
             radiusin = max(1, np.ceil(ms/3.))
@@ -844,7 +844,7 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
             #trainlen = int(np.ceil(50*mpd))
             radiusin = max(1, ms/12.) #from radius fin in rough training
             radiusfin = max(1, radiusin/25.)
-            print('Nos of iteration',trainlen)
+            #print('Nos of iteration',trainlen)
 
 #             radiusin = max(1, ms/2.) #from radius fin in rough training
 #             radiusfin = max(1, radiusin/2.)
@@ -852,7 +852,7 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
             #trainlen = int(np.ceil(40*mpd))
             radiusin = max(1, np.ceil(ms/8.)/4)
             radiusfin = 1#max(1, ms/128)
-            print('Nos of iteration',trainlen)
+            #print('Nos of iteration',trainlen)
 
     radius = np.linspace(radiusin, radiusfin, trainlen)
     ##################################################
@@ -861,7 +861,7 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
     New_Codebook_V = np.empty((nnodes, dim))
     New_Codebook_V = getattr(self, 'codebook')
 
-    #print 'data is in shared memory?', shared_memory
+    ##print 'data is in shared memory?', shared_memory
     if shared_memory == 'yes':
         data = getattr(self, 'data')
         Data_folder = tempfile.mkdtemp()
@@ -874,8 +874,8 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
     #Since it is a fixed value we can skip it during bmu finding for each data point, but later we need it calculate quantification error
     X2 = np.einsum('ij,ij->i', data, data)
     if verbose=='on':
-        print '%s training...' %phase
-        print 'radius_ini: %f , radius_final: %f, trainlen: %d' %(radiusin, radiusfin, trainlen)
+        print('%s training...' %phase)
+        print('radius_ini: %f , radius_final: %f, trainlen: %d' %(radiusin, radiusfin, trainlen))
     neigh_func = getattr(self,'neigh')
     for i in range(trainlen):
         if neigh_func == 'Guassian':
@@ -883,10 +883,10 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
             H = np.exp(-1.0*UD2/(2.0*radius[i]**2)).reshape(nnodes, nnodes)
         if neigh_func == 'Bubble':
             # in case of Bubble function
-#         	print radius[i], UD2.shape
-#         	print UD2
+#         	#print radius[i], UD2.shape
+#         	#print UD2
             H = l(radius[i],np.sqrt(UD2.flatten())).reshape(nnodes, nnodes) + .000000000001
-#         	print H
+#         	#print H
 
         t1 = time()
         bmu = None
@@ -896,9 +896,9 @@ def batchtrain(self, njob = 1, phase = None, shared_memory = 'no', verbose='on',
         #updating the codebook
         t2 = time()
         New_Codebook_V = self.update_codebook_voronoi(data, bmu, H, radius)
-        #print 'updating nodes: ', round (time()- t2, 3)
+        ##print 'updating nodes: ', round (time()- t2, 3)
         if verbose=='on':
-            print "epoch: %d ---> elapsed time:  %f, quantization error: %f " %(i+1, round(time() - t1, 3),np.mean(np.sqrt(bmu[1] + X2)))
+            print("epoch: %d ---> elapsed time:  %f, quantization error: %f " %(i+1, round(time() - t1, 3),np.mean(np.sqrt(bmu[1] + X2))))
     setattr(self, 'codebook', New_Codebook_V)
     bmu[1] = np.sqrt(bmu[1] + X2)
     setattr(self, 'bmu', bmu)
@@ -916,7 +916,7 @@ def grid_dist(self,bmu_ind):
         lattice = getattr(self, 'lattice')
     except:
         lattice = 'hexa'
-        print 'lattice not found! Lattice as hexa was set'
+        #print 'lattice not found! Lattice as hexa was set'
 
     if lattice == 'rect':
         return rect_dist(self,bmu_ind)
@@ -931,7 +931,7 @@ def grid_dist(self,bmu_ind):
             pass
 
         #needs to be implemented
-        print 'to be implemented' , rows , cols
+        #print 'to be implemented' , rows , cols
         return np.zeros((rows,cols))
 
 def rect_dist(self,bmu):
@@ -949,14 +949,14 @@ def rect_dist(self,bmu):
         c_bmu = int(bmu%cols)
         r_bmu = int(bmu/cols)
     else:
-      print 'wrong bmu'
+      print('wrong bmu')
     #calculating the grid distance
     if np.logical_and(rows>0 , cols>0):
         r,c = np.arange(0, rows, 1)[:,np.newaxis] , np.arange(0,cols, 1)
         dist2 = (r-r_bmu)**2 + (c-c_bmu)**2
         return dist2.ravel()
     else:
-        print 'please consider the above mentioned errors'
+        print('please consider the above mentioned errors')
         return np.zeros((rows,cols)).ravel()
 
 
@@ -968,7 +968,7 @@ def view_2d(self, path, text_size, which_dim='all', what = 'codebook'):
             data_raw = getattr(self, 'data_raw')
             codebook = denormalize_by(data_raw, codebook)
         else:
-            print 'first initialize codebook'
+            print('first initialize codebook')
         if which_dim == 'all':
             dim = getattr(self, 'dim')
             indtoshow = np.arange(0,dim).T
@@ -986,7 +986,7 @@ def view_2d(self, path, text_size, which_dim='all', what = 'codebook'):
             max_dim = codebook.shape[1]
             dim = len(which_dim)
             ratio = float(dim)/float(max_dim)
-            #print max_dim, dim, ratio
+            ##print max_dim, dim, ratio
             ratio = np.max((.35,ratio))
             indtoshow = np.asarray(which_dim).T
             sH, sV = 16,16*ratio*1
@@ -1033,7 +1033,7 @@ def view_2d_Pack(self, text_size,which_dim='all', what = 'codebook',save='No', g
             data_raw = getattr(self,'data_raw')
             codebook = denormalize_by(data_raw, codebook)
         else:
-            print 'first initialize codebook'
+            print('first initialize codebook')
         if which_dim == 'all':
             dim = getattr(self, 'dim')
             indtoshow = np.arange(0,dim).T
@@ -1051,7 +1051,7 @@ def view_2d_Pack(self, text_size,which_dim='all', what = 'codebook',save='No', g
             max_dim = codebook.shape[1]
             dim = len(which_dim)
             ratio = float(dim)/float(max_dim)
-            #print max_dim, dim, ratio
+            ##print max_dim, dim, ratio
             ratio = np.max((.35,ratio))
             indtoshow = np.asarray(which_dim).T
             sH, sV = 16,16*ratio*1
@@ -1069,7 +1069,7 @@ def view_2d_Pack(self, text_size,which_dim='all', what = 'codebook',save='No', g
         h = .1
         w= .1
         fig = plt.figure(figsize=(no_col_in_plot*2.5*(1+w),no_row_in_plot*2.5*(1+h)))
-#         print no_row_in_plot, no_col_in_plot
+#         #print no_row_in_plot, no_col_in_plot
         norm = matplotlib.colors.Normalize(vmin = np.median(codebook.flatten())-1.5*np.std(codebook.flatten()), vmax = np.median(codebook.flatten())+1.5*np.std(codebook.flatten()), clip = False)
 
         DD = pd.Series(data = codebook.flatten()).describe(percentiles=[.03,.05,.1,.25,.3,.4,.5,.6,.7,.8,.9,.95,.97])
@@ -1109,7 +1109,7 @@ def view_2d_Pack(self, text_size,which_dim='all', what = 'codebook',save='No', g
         if hasattr(self, 'cluster_labels'):
             codebook = getattr(self, 'cluster_labels')
         else:
-            print('clustering based on default parameters...')
+            #print('clustering based on default parameters...')
             codebook = self.cluster()
         h = .2
         w= .001
@@ -1141,10 +1141,10 @@ def view_2d_Pack(self, text_size,which_dim='all', what = 'codebook',save='No', g
 
     if save == 'Yes':
             if save_dir != 'empty':
-                #print save_dir
+                ##print save_dir
                 fig.savefig(save_dir,bbox_inches='tight', transparent=False, dpi=200)
             else:
-                #print save_dir
+                ##print save_dir
                 add = '/home/peeyush/Downloads/SOM.png'
                 fig.savefig(add,bbox_inches='tight', transparent=False, dpi=200)
             plt.close(fig)
@@ -1158,7 +1158,7 @@ def view_1d(self, text_size, which_dim ='all', what = 'codebook'):
             data_raw = getattr(self,'data_raw')
             codebook = denormalize_by(data_raw, codebook)
         else:
-            print 'first initialize codebook'
+            print('first initialize codebook')
         if which_dim == 'all':
             dim = getattr(self, 'dim')
             indtoshow = np.arange(0,dim).T
@@ -1176,7 +1176,7 @@ def view_1d(self, text_size, which_dim ='all', what = 'codebook'):
             max_dim = codebook.shape[1]
             dim = len(which_dim)
             ratio = float(dim)/float(max_dim)
-            #print max_dim, dim, ratio
+            ##print max_dim, dim, ratio
             ratio = np.max((.35,ratio))
             indtoshow = np.asarray(which_dim).T
             sH, sV = 16,16*ratio*1
@@ -1261,11 +1261,11 @@ def lininit(self):
             coord[i,0] = int(i%cols) #y
         mx = np.max(coord, axis = 0)
         mn = np.min(coord, axis = 0)
-        #print coord
+        ##print coord
 
         coord = (coord - mn)/(mx-mn)
         coord = (coord - .5)*2
-        #print coord
+        ##print coord
         data = getattr(self, 'data')
         me = np.mean(data, 0)
         data = (data - me)
@@ -1314,7 +1314,7 @@ def denormalize_by(data_by, n_vect, n_method = 'var'):
         vect = n_vect* st + me
         return vect
     else:
-        print 'data is not normalized before'
+        #print 'data is not normalized before'
         return n_vect
 
 def l(a,b):

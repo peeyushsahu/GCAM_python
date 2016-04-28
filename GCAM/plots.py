@@ -508,7 +508,7 @@ def plot_celltypesignificance(path, plotdf, args):
     print ('plotting celltype significance plot')
     #plotdf = plotdf[plotdf['genecluster'] > args.celltypeClusterSize]
     if args.subcommand_name == 'exprbased':
-        plotdf = plotdf.sort('p-val',ascending=True)
+        plotdf = plotdf.sort_values('p-val',ascending=True)
     l = plotdf['genecluster'].tolist()
     t = plotdf['p-val'].tolist()
     s = range(1, len(plotdf)+1)

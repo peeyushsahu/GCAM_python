@@ -57,6 +57,7 @@ def main():
               'biopython',
               'scipy',
               'scikit-learn',
+              'seaborn',
           ],
           )
 

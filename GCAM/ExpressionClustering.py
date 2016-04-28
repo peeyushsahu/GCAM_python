@@ -2,9 +2,9 @@ __author__ = 'peeyush'
 import pandas as pd
 import numpy as np
 import sys, os
-import sompy as SOM
-import SignificanceTesting as scale
-import plots
+from GCAM import sompy as SOM
+from GCAM import SignificanceTesting as scale
+from GCAM import plots
 
 def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridSize=10, normalize=True):
     print('Running SOM clustering')
@@ -79,7 +79,7 @@ def cluster_choose(df_dict, path, foldDifference=2):
     gene_names = []
     df_fold = {}
     #for df in df_dict.values():
-    for key, df in df_dict.iteritems():
+    for key, df in df_dict.items():
         fpkms = df.mean(axis=0)
         df_fold[key] = abs(max(fpkms)/min(fpkms))
     for key in sorted(df_fold, key=df_fold.get, reverse=True):
@@ -105,7 +105,7 @@ def clusterplot(df_dict, path):
     fig.set_size_inches(18.5, 10.5)
     row = 0
     col = 0
-    for i, v in df_dict.iteritems():
+    for i, v in df_dict.items():
         v.boxplot(ax=axes[row,col], fontsize=7)
         axes[row,col].set_title('Size:'+str(len(v)), fontsize=10)
         row += 1
@@ -129,7 +129,7 @@ def find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clustersize, args):
     sigCelltype = sigCelltypedf
     sigGene = cellgenedf
     cellType = []
-    sigCelltype = sigCelltype.sort('p-val', ascending=True)
+    sigCelltype = sigCelltype.sort_values('p-val', ascending=True)
     for k, v in sigCelltype.iterrows():
         if v['genecluster'] > clustersize: # and v['p-val'] <= 0.05
             cellType.append(v['celltype'])
@@ -150,7 +150,7 @@ def find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clustersize, args):
                             genelist4expr.setdefault(cell, []).append(gene)
                             genelist4expr.setdefault(cell1, []).append(gene)
     #print combination
-    for k, v in genelist4expr.iteritems():
+    for k, v in genelist4expr.items():
         genelist4expr[k] = list(set(v))
     #print genelist4expr
     return geneList4expr(sigCelltypedf, cellgenedf, clustersize, args)
@@ -161,14 +161,14 @@ def geneList4expr(sigCelltypedf, cellgenedf, clustersize, args):
     sigCelltype = sigCelltypedf
     sigGene = cellgenedf
     cellType = []
-    sigCelltype = sigCelltype.sort('p-val', ascending=True)
+    sigCelltype = sigCelltype.sort_values('p-val', ascending=True)
     for k, v in sigCelltype.iterrows():
         if v['genecluster'] > clustersize: # and v['p-val'] <= 0.05
             cellType.append(v['celltype'])
     genelist4expr = dict((k, []) for k in cellType)
     sigGene_group = sigGene.groupby('gene')
     for gene, df in sigGene_group:
-        df = df.sort('p-val', ascending=True)
+        df = df.sort_values('p-val', ascending=True)
         for k, v in df.iterrows():
             if v['celltype'] in cellType:
                 genelist4expr[v['celltype']].append(v['gene'])
@@ -176,7 +176,7 @@ def geneList4expr(sigCelltypedf, cellgenedf, clustersize, args):
     print(args.outdir)
     myfile = open(os.path.join(args.outdir, 'celltypeSign_new.txt'), 'w')
     myfile.write('celltype'+'\t'+'genes')
-    for k, v in genelist4expr.iteritems():
+    for k, v in genelist4expr.items():
         myfile.write('\n'+k+'\t'+','.join(v))
     myfile.close()
     return genelist4expr
@@ -266,7 +266,7 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
     print('Removing overlapping genes')
     gene2cellCluster = find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clusterSize, args)
     cellexpr_dict = OrderedDict()
-    for celltype, genelist in gene2cellCluster.iteritems():
+    for celltype, genelist in gene2cellCluster.items():
         if len(genelist) > 10:  # Minimum genes per celltype for comparision
             #print celltype
             for i in pheno:
@@ -367,7 +367,7 @@ def mean_coffi4exprdf(expr, path, args):
         df2exprsig = pd.concat([target, data], axis=1)
         #df2exprsig.to_csv(os.path.join(path, cell+'GCAM_cellexpr_sig.txt'), sep='\t')
 
-    print plotDataframe
+    #print plotDataframe
     if not path is None:
         plotDataframe.to_csv(os.path.join(path, 'GCAM_cellexpr_sig.txt'), sep='\t')
         for column in plotDataframe.columns:

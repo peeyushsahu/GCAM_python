@@ -1,5 +1,5 @@
 __author__ = 'peeyush'
-import FilesFolders
+from GCAM import FilesFolders
 
 def gene2synonym(geneList, geneSyn):
     '''

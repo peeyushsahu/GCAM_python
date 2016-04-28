@@ -131,7 +131,7 @@ def write_result(significanceDF, outdir, args):
     :return:
     '''
     cellgenedf = significanceDF.cellgenedf  # [significanceDF.cellgenedf['p-val'] < 0.05]
-    cellgenedf.sort(['p-val'], ascending=True)
+    cellgenedf.sort_values('p-val', ascending=True)
     if len(cellgenedf)>0:
         filtereddf = filter_df(cellgenedf)
         filtereddf.to_excel(os.path.join(outdir, 'GCAM_sigenes.xlsx'), index=False)
@@ -142,7 +142,7 @@ def write_result(significanceDF, outdir, args):
     #plots.stack_barplot(sigCelltypedf, outdir, key_celltypes)
     if len(sigCelltypedf) > 1:
         plots.plot_celltypesignificance(outdir, sigCelltypedf, args)
-    sigCelltypedf.sort(['genecluster'], ascending=True)
+    sigCelltypedf.sort_values('genecluster', ascending=True)
     if len(sigCelltypedf)>0:
         sigCelltypedf.to_excel(os.path.join(outdir, 'GCAM_sigCelltypes.xlsx'), index=False)
     else: print('No significant celltypes')
@@ -157,7 +157,7 @@ def filter_df(df):
     new_df = pd.DataFrame(columns=df.columns)
     df_gr = df.groupby('gene')
     for k, gr in df_gr:
-        new_gr = gr.sort('p-val', ascending=True)
+        new_gr = gr.sort_values('p-val', ascending=True)
         rows = 1
         for i, r in new_gr.iterrows():
             if rows <= 3:

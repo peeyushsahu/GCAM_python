@@ -1,5 +1,5 @@
 __author__ = 'peeyush'
-import FilesFolders
+from GCAM import FilesFolders
 
 class Genes():
     def __init__(self, gene, subquery=None, resource_path=None):
