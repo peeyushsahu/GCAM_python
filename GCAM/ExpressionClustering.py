@@ -5,9 +5,11 @@ import sys, os
 from GCAM import sompy as SOM
 from GCAM import SignificanceTesting as scale
 from GCAM import plots
+import logging, timeit
 
 def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridSize=10, normalize=True):
-    print('Running SOM clustering')
+    print('clustering expression dataset..')
+    smstart = timeit.default_timer()
     newDataDF = pd.DataFrame()
     pheno_groups = pheno_data.groupby('phenotype')
     #print(pheno_data)
@@ -52,6 +54,11 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
     nof_nuron_cluster = set(neurons)
     df_dict = {i:pd.DataFrame() for i in nof_nuron_cluster}
     #print 'Number of neurons occupied', len(df_dict)
+    smstop = timeit.default_timer()
+    logging.info('TC in clustering:'+str(smstop-smstart)+'sec')
+
+    ######################################################################
+    dstart = timeit.default_timer()
     rotation = ['|', '/', '-', '\\']
     i=0
     for ind in range(0, len(neurons)):
@@ -63,7 +70,7 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
     geneList = []
     dfGene = 2001
     while dfGene > 2000:
-        print('FoldDifferencec',foldDifference)
+        #print('FoldDifferencec',foldDifference)
         geneList = cluster_choose(df_dict, path, foldDifference=foldDifference)
         dfGene = len(geneList)
         with open(os.path.join(path,'parameter.txt'), 'a') as myfile:
@@ -71,11 +78,13 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
             myfile.write("DE genes selected for analysis: "+str(dfGene)+"\n")
         foldDifference = foldDifference + 1
         myfile.close()
+    dstop = timeit.default_timer()
+    logging.info('TC in DE gene selection:'+str(dstop-dstart)+'sec')
     return geneList, normnewDataDF
 
 
 def cluster_choose(df_dict, path, foldDifference=2):
-    clusterplot(df_dict, path)
+    clusterplot(df_dict, path, foldDifference)
     gene_names = []
     df_fold = {}
     #for df in df_dict.values():
@@ -93,7 +102,7 @@ def cluster_choose(df_dict, path, foldDifference=2):
     return gene_names
 
 
-def clusterplot(df_dict, path):
+def clusterplot(df_dict, path, foldDifference):
     '''
     Plots all the cluster of self organizing map.
     :param df_dict:
@@ -101,19 +110,21 @@ def clusterplot(df_dict, path):
     :return:
     '''
     import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(nrows=10, ncols=10)
+    fig, axes = plt.subplots(nrows=5, ncols=5)
     fig.set_size_inches(18.5, 10.5)
     row = 0
     col = 0
     for i, v in df_dict.items():
-        v.boxplot(ax=axes[row,col], fontsize=7)
-        axes[row,col].set_title('Size:'+str(len(v)), fontsize=10)
-        row += 1
-        #print row, col
-        if row == 10:
-            row = 0
-            col += 1
-        if i == 99: break
+        fpkms = v.mean(axis=0)
+        if abs(max(fpkms)/min(fpkms)) >= foldDifference:
+            v.boxplot(ax=axes[row,col], fontsize=7)
+            axes[row,col].set_title('Size:'+str(len(v)), fontsize=10)
+            row += 1
+            #print row, col
+            if row == 5:
+                row = 0
+                col += 1
+            if i == 24: break
     fig.tight_layout()
     fig.savefig(os.path.join(path, 'GCAM_cluster_expression.png'))
     fig.clf()
@@ -224,7 +235,7 @@ def find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clust
     for cell, sigGenes in dict4sortedGenes.iteritems():
         dict4sortedGenes[cell] = list(set(sigGenes))
         # print cell, len(sigGenes)
-    print("Genes/celltype after filtering:")
+    #print("Genes/celltype after filtering:")
     #for key, cell in dict4sortedGenes.iteritems():
         #print(key, len(cell))
     myfile = open(os.path.join(args.outdir, 'celltypeSign_old.txt'), 'w')
@@ -299,7 +310,7 @@ def coffi4exprdf(expr, path, args, control=None):
                 con.append(cont)
         break
     #print(control, con)
-    print('Using nuSVR.....')
+    #print('Using nuSVR.....')
     for cell in expr.keys():
         data = expr.get(cell)
         target = data[control]
@@ -341,7 +352,7 @@ def mean_coffi4exprdf(expr, path, args):
         for cont in expr.get(sample).columns:
             con.append(cont)
         break
-    print('nuSVR.....')
+    #print('nuSVR.....')
     for cell in expr.keys():
         #print(cell)
         data = expr.get(cell)

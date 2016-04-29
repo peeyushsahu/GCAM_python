@@ -3,6 +3,7 @@ __author__ = 'peeyush'
 import pandas as pd
 import scipy.stats as stats
 import os
+import logging, timeit
 
 
 
@@ -80,9 +81,9 @@ class SignificanceObject():
             #print k, v.sum()
             if v.sum() < 5:
                 Columns.append(k)
-        print(len(Columns))
+        #print(len(Columns))
         self.occurrencedf = occuDf.drop(Columns, axis=1)
-        print(self.occurrencedf.shape)
+        #print(self.occurrencedf.shape)
 
 
     def fisher_occurrence_test(self):
@@ -90,6 +91,7 @@ class SignificanceObject():
         This method will calculate significance of celltypes per gene using their occurrence.
         Statistical test used is Fisher Exact Test
         '''
+        fsstart = timeit.default_timer()
         self.filter_occuDf()
         occu_df = self.occurrencedf
         binom_prob = self.binom_prob
@@ -148,8 +150,9 @@ class SignificanceObject():
         self.binom_pval_df = binom_pvaldf
         self.pvaldf = pvaldf
         self.adjpvaldf = adjpvaldf
+        fsstop = timeit.default_timer()
+        logging.info('TC in sig occur test:'+str(fsstop-fsstart)+'sec')
         self.celltype_overrepresntation_list(enrichmentdf)  #### def()
-
 
     def celltype_overrepresntation_list(self, enrichmentdf):
         '''
@@ -169,44 +172,19 @@ class SignificanceObject():
         #self.filter_cellgenedf()  # Filter single cell multigene enrihment
         self.fisher_significant_celltypes()
 
-    def filter_cellgenedf(self):
-        '''
-        This method will remove one gene to multi celltype.
-        '''
-        group_cellgene = self.cellgenedf.groupby('gene')
-        new_cellgenedf = pd.DataFrame(columns=self.cellgenedf.columns)
-        siggenes = group_cellgene.groups
-        for gene in siggenes:
-            #df = group_cellgene.get_group(gene).sort('enrichment', ascending=False)
-            df = group_cellgene.get_group(gene).sort('p-val', ascending=True)
-            for ind, row in df.iterrows():
-                #print ind, row
-                if(row['enrichment'] > 0.05) | (row['p-val'] < 0.05):
-                    new_cellgenedf = new_cellgenedf.append(row)
-            '''
-            if len(df) > 2:
-                new_cellgenedf = new_cellgenedf.append(df.iloc[0, ])
-                new_cellgenedf = new_cellgenedf.append(df.iloc[1, ])
-                new_cellgenedf = new_cellgenedf.append(df.iloc[2, ])
-            else:
-                new_cellgenedf = new_cellgenedf.append(df)
-            '''
-        #print new_cellgenedf
-        self.cellgenedf = new_cellgenedf
-
-
     def fisher_significant_celltypes(self):
         '''
         This method will test the combined significance of celltype in the data and help predicts
         its association with user given data.
         '''
+        fsstart = timeit.default_timer()
         sigcelltype = pd.DataFrame()
         #print self.cellgenedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
         cellgenedf = self.cellgenedf
         c = len(cellgenedf[cellgenedf['p-val'] <= 0.05])
         d = len(cellgenedf) #[cellgenedf['P-val'] < 0.5]
-        print(c,d)
+        #print(c,d)
         for celltype, val in cellgroup:
             #print celltype
             if len(val[val['p-val'] <= 0.001]) > 1:
@@ -231,7 +209,8 @@ class SignificanceObject():
             else:
                 sigcelltype.loc[k, 'FDR'] = 1
         self.sigCelltypedf = sigcelltype
-
+        fsstop = timeit.default_timer()
+        logging.info('TC in sig celltype test:'+str(fsstop-fsstart)+'sec')
 
 def scale(val, src, dst):
     '''

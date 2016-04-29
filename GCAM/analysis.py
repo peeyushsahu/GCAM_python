@@ -1,4 +1,3 @@
-__author__ = 'peeyush'
 import timeit, os
 from GCAM import Occurrence
 from GCAM import FilesFolders
@@ -7,6 +6,10 @@ from GCAM import ExpressionAnalysis, ExpressionClustering
 from GCAM import Previous_genecheck
 from GCAM import plots
 import pandas as pd
+import logging
+
+__author__ = 'peeyush'
+
 
 def gcam_analysis(args, resource_path):
     '''
@@ -15,22 +18,28 @@ def gcam_analysis(args, resource_path):
     :param resource_path:
     :return: cell occurrence dataframe
     '''
+    outdir = FilesFolders.create_folders(args.outdir)
+    logging.basicConfig(filename=os.path.join(outdir,'GCAM.log'), level=logging.INFO)
+    logging.info('Started')
     if not args.dbpath is None:
         if os.path.exists(args.dbpath):
-            print('External resource path provided.')
+            logging.info('External resource path used.')
             resource_path = args.dbpath
         else:
-            print('db dir does not exist.')
+            logging.error('Resource dir for db does not exist.')
+            print('Resource dir for db does not exist, check --dbpath')
     else:
-        print('Default resource path used.')
+        logging.info('Default resource path used.')
         resource_path = resource_path
+
     subcommand = args.subcommand_name
     tstart = timeit.default_timer()
-    ### Reading require databases
-    print ('Reading required DBs')
-    outdir = FilesFolders.create_folders(args.outdir)
-    warnings_error(args)
+
+    # Reading require databases
+    logging.info('Reading required resource dbs..')
+    warnings(args)
     write_parameter(args, subcommand, outdir)
+
     if subcommand == 'genebased':
         genenames = FilesFolders.get_genes(args.path)
         gene_based(args, resource_path, genenames, outdir)
@@ -40,7 +49,8 @@ def gcam_analysis(args, resource_path):
         pheno_data = FilesFolders.read_pheno_data(args.phenopath)
         ## print pheno_data['phenotype']
         if args.controlsample is not None and args.controlsample not in list(pheno_data['phenotype']):
-            raise KeyError(args.controlsample+": control sample name not in phenotype list.")
+            logging.error(args.controlsample+': control sample name not found in phenotype list')
+            raise KeyError(args.controlsample+": control sample name not found in phenotype list.")
         genenames, newexprdf = expr_based(outdir, expressiondf, pheno_data, args)
         #print 'genes', genenames
         significance_Df = gene_based(args, resource_path, genenames, outdir)
@@ -49,6 +59,8 @@ def gcam_analysis(args, resource_path):
         #plots.stack_barplot(plotdf, outdir, key_celltypes=args.key_celltype_list, method=subcommand)
     tstop = timeit.default_timer()
     print ('Total time elapsed: ' + str(tstop - tstart) + ' sec')
+    logging.info('Total time elapsed: ' + str(tstop - tstart) + ' sec')
+    logging.info('Finished')
 
 
 def write_parameter(args, subcommand, outdir):
@@ -71,7 +83,7 @@ def write_parameter(args, subcommand, outdir):
         parameter.close()
 
 
-def warnings_error(args):
+def warnings(args):
     '''
     Gives warning based on paramenter collection.
     :return:
@@ -80,6 +92,7 @@ def warnings_error(args):
     if subcommand == 'exprbased':
         if args.controlsample is None:
             if not args.meanAsControl:
+                logging.error("Control sample name is not selected.")
                 raise ValueError("Please specify control sample name OR set --meanAsControl, -m")
         userCelltype = args.selectCelltypes
         if userCelltype is not None:
@@ -97,6 +110,8 @@ def gene_based(args, resource_path, genenames, outdir):
     cellSyn = FilesFolders.cell_synonym(resource_path)
     binom_prob = FilesFolders.read_binom_prob(resource_path)
     pd.DataFrame(genenames, columns=['genenames']).to_csv(outdir + os.path.sep + 'input_gene_list.txt', sep='\t', encoding='utf-8', index=False)
+
+    ocstart = timeit.default_timer()
     if synonym:
         geneSyn = FilesFolders.gene_synonym(resource_path, organism)
         genenames = Occurrence.gene2synonym(genenames, geneSyn)
@@ -116,10 +131,14 @@ def gene_based(args, resource_path, genenames, outdir):
     # print ('size of new df', len(cellOccu))
     cellOccu = cellOccu.set_index(cellOccu['celltype'])
     cellOccu = cellOccu.drop(['celltype'], axis=1)
+    ocstop = timeit.default_timer()
+    logging.info("TC in occurrence analysis:"+str(ocstop - ocstart)+'sec')
+
     ## Subtract eg. cd4 t cell from t cell
     #cellOccu = Occurrence.subtract_cellnamepeat(cellOccu, resource_path)
     #cellOccu.to_csv(outdir + os.path.sep + 'GCAM_occurrence.csv', sep='\t', encoding='utf-8', ignore_index=True)
     # Scale df for heatmap and do further analysis
+
     significanceDF = SignificanceTesting.SignificanceObject(cellOccu, binom_prob)
     significanceDF.heatmapdf_create()
     significanceDF.plot_heatmap(outdir)

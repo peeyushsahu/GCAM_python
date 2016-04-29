@@ -290,7 +290,7 @@ def stack_barplot(args, sigcelltype, path, name='_', method='genebased'):
         number_label = float(len(cell_type))
         adjustment = 0.02
         plot_color = d_colors[:len(cells)]
-        cell_type = map(str.lower, cell_type)
+        cell_type = list(map(str.lower, cell_type))
 
         if method == 'genebased':
             stackplot_data.append(cells)
@@ -307,7 +307,7 @@ def stack_barplot(args, sigcelltype, path, name='_', method='genebased'):
             for col in sigcelltype.columns:
                 genes = [0.0]*len(cells)
                 for i, r in sigcelltype.iterrows():
-                    #print i
+                    #print(i)
                     ind = cell_type.index(i)
                     genes[ind] = float(r[col])
                 stackplot_data.insert(0, genes)

@@ -20,7 +20,7 @@ def create_folders(path):
     npath = os.path.join(path, 'GCAM_output_'+str(time.strftime("%d_%m_%Y"))+'_'+str(time.strftime("%H_%M_%S")))
     if not os.path.exists(npath):
         os.makedirs(npath)
-        print('Changed permission')
+        #print('Changed permission')
         os.chmod(npath, 0o777)
         #os.chmod(npath, mode=777)
     return npath
@@ -171,7 +171,7 @@ def read_binom_prob(resource_path):
     :return:
     '''
     try:
-        print ('binomial probability calculation...')
+        #print ('binomial probability calculation...')
         cell_binom = read_csv(os.path.join(resource_path, 'cellType_binom_prob.txt'), header=0, sep="\t")
     except:
         raise ValueError('Binomial probabilities not found')
