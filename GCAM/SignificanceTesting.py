@@ -209,7 +209,7 @@ class SignificanceObject():
         print(c,d)
         for celltype, val in cellgroup:
             #print celltype
-            if len(val[val['p-val'] <= 0.05]) > 1:
+            if len(val[val['p-val'] <= 0.001]) > 1:
                 #print val
                 a = len(val[val['p-val'] <= 0.001])
                 b = len(val) - a

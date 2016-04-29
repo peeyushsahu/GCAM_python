@@ -71,6 +71,8 @@ def add_genebased_parser(parser):
                              help = "If specified all output files will be written to that directory. Default: the current working directory")
     group_input.add_argument("-p", "--path", type=str, dest="path", required=True,
                              help="file path to gene names")
+    group_input.add_argument("-d", "--dbpath", type=str, dest="dbpath", required=False, default=None,
+                             help="dir path to db")
     group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
                              help="additional search term with gene name to select specific abstracts")
     group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
@@ -99,6 +101,8 @@ def add_expressionbased_parser(parser):
                              help="file path to expression data")
     group_input.add_argument("-p", "--phenopath", type=str, dest="phenopath", required=True,
                              help="file path to pheno data")
+    group_input.add_argument("-d", "--dbpath", type=str, dest="dbpath", required=False, default=None,
+                             help="dir path to db")
     group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
                              help="additional search term with gene name to select specific abstracts")
     group_input.add_argument("-s", "--synonym", dest="synonym", action='store_true',

@@ -15,6 +15,15 @@ def gcam_analysis(args, resource_path):
     :param resource_path:
     :return: cell occurrence dataframe
     '''
+    if not args.dbpath is None:
+        if os.path.exists(args.dbpath):
+            print('External resource path provided.')
+            resource_path = args.dbpath
+        else:
+            print('db dir does not exist.')
+    else:
+        print('Default resource path used.')
+        resource_path = resource_path
     subcommand = args.subcommand_name
     tstart = timeit.default_timer()
     ### Reading require databases

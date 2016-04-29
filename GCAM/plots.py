@@ -504,23 +504,25 @@ def stackedBarPlot(ax,                                 # axes to plot onto
 def plot_celltypesignificance(path, plotdf, args):
     import matplotlib.pyplot as plt
     import numpy as np
-    import math
+    import sys
     print ('plotting celltype significance plot')
-    #plotdf = plotdf[plotdf['genecluster'] > args.celltypeClusterSize]
+    plotdf = plotdf[(plotdf['genecluster'] >= 10)]
+    if len(plotdf) < 1:
+        sys.exit('Not enough celltypes to plot, please look at the sgcelltype.xls')
     if args.subcommand_name == 'exprbased':
         plotdf = plotdf.sort_values('p-val',ascending=True)
-    l = plotdf['genecluster'].tolist()
+    l = np.log2(plotdf['genecluster'].tolist())
     t = plotdf['p-val'].tolist()
     s = range(1, len(plotdf)+1)
     name = plotdf['celltype'].tolist()
-    area = [(math.log(x, 10) * -15) for x in t]
+    area = [abs((np.log10(x)) * 15) for x in t]
     color = np.random.random(len(t))
     #print area
     plt.scatter(s, l, s=area, c=color, alpha=0.5)
     plt.grid(True, linestyle=':', color='black')
 
     # draw a thick red hline at y=0 that spans the xrange
-    h = plt.axhline(linewidth=1, color='r', y=args.celltypeClusterSize, linestyle='--')
+    h = plt.axhline(linewidth=1, color='r', y=5, linestyle='--') #y=args.celltypeClusterSize
 
     for i in range(0, len(t)):
         plt.annotate(name[i], xy=(s[i], l[i]), xycoords='data',
@@ -538,10 +540,10 @@ def plot_celltypesignificance(path, plotdf, args):
 
     plt.tick_params(axis='both', labelsize=8)
     plt.xlim(0, len(plotdf)+2)
-    plt.ylim(0, max(l)+5)
+    plt.ylim(min(l)-0.2, max(l)+0.2)
     plt.title('Cell-type significance', fontsize=14)
     plt.xlabel('Celltypes', fontsize=12)
-    plt.ylabel('Gene cluster size', fontsize=12)
+    plt.ylabel('log2 Gene cluster size', fontsize=12)
     plt.tight_layout()
     plt.savefig(os.path.join(path, 'GCAM_SigCelltype.svg'))
     plt.clf()
