@@ -117,7 +117,7 @@ def add_expressionbased_parser(parser):
                              help="Set control sample for relative celltype fraction analysis.")
     group_input.add_argument("-c", "--clustrsizeSigcelltype", type=int, default=30, dest="celltypeClusterSize",
                              help="Lowest number of genes associated for celltype fraction analysis.")
-    group_input.add_argument("-n", "--numiteration", type=int, default=100, dest="somiter",
+    group_input.add_argument("-n", "--numiteration", type=int, default=1000, dest="somiter",
                              help="Number of iteration performed for SOM clustering.")
     group_input.add_argument("--selectCelltypes", type=str, default=None, dest="selectCelltypes",
                              help="Comma separated list of celltypes, to remove their effects from celltype-fraction analysis. Max:26")

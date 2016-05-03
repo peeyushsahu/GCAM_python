@@ -89,7 +89,8 @@ def cluster_choose(df_dict, path, foldDifference=2):
     df_fold = {}
     #for df in df_dict.values():
     for key, df in df_dict.items():
-        fpkms = df.mean(axis=0)
+        #fpkms = df.mean(axis=0)
+        fpkms = df.median(axis=0)
         df_fold[key] = abs(max(fpkms)/min(fpkms))
     for key in sorted(df_fold, key=df_fold.get, reverse=True):
         if df_fold[key] > foldDifference:
@@ -265,10 +266,6 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
         sigCelltypedf = sigCelltypedf[sigCelltypedf['celltype'].isin(userCelltype)]
         cellgenedf = cellgenedf[cellgenedf['celltype'].isin(userCelltype)]
     #print sigCelltypedf
-    '''
-    if not args.key_celltype_list:
-        sigCelltypedf = sigCelltypedf[sigCelltypedf['genecluster'] > clusterSize]
-    '''
     if userCelltype is None:
         sigCelltypedf = significanceDF.sigCelltypedf
         sigCelltypedf = sigCelltypedf[sigCelltypedf['genecluster'] > clusterSize]
@@ -292,11 +289,11 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
         raise ValueError("No significant gene for fraction comparison.")
     if args.controlsample is None:
         print("mean as control.")
-        return mean_coffi4exprdf(expr, path, args)
-    return coffi4exprdf(expr, path, args, control=control)
+        return mean_coffi4exprdf(sigCelltypedf, expr, path, args)
+    return coffi4exprdf(sigCelltypedf, expr, path, args, control=control)
 
 
-def coffi4exprdf(expr, path, args, control=None):
+def coffi4exprdf(sigCelltypedf, expr, path, args, control=None):
     '''
     Calculate cofficient and prepare dataframe for ploting.
     '''
@@ -337,11 +334,11 @@ def coffi4exprdf(expr, path, args, control=None):
         for column in plotDataframe.columns:
             plotDataframe.loc[:,column] = (plotDataframe.loc[:,column]/sum(plotDataframe.loc[:,column]))
     ## plotting stacked bar plot
-    plots.heatmap_Sigcelltype(plotDataframe.T, path)
-    plots.stack_barplot(args, plotDataframe, path, name=control, method='exprbased')
+    plots.heatmap_Sigcelltype(args, plotDataframe.T, path)
+    plots.stack_barplot(sigCelltypedf, args, plotDataframe, path, name=control)
     #return plotDataframe
 
-def mean_coffi4exprdf(expr, path, args):
+def mean_coffi4exprdf(sigCelltypedf, expr, path, args):
     '''
     Calculate cofficient and prepare dataframe for ploting.
     '''
@@ -384,8 +381,8 @@ def mean_coffi4exprdf(expr, path, args):
         for column in plotDataframe.columns:
             plotDataframe.loc[:,column] = (plotDataframe.loc[:,column]/sum(plotDataframe.loc[:,column]))
     ## plotting stacked bar plot
-    plots.heatmap_Sigcelltype(plotDataframe.T, path)
-    plots.stack_barplot(args, plotDataframe, path, name='_', method='exprbased')
+    plots.heatmap_Sigcelltype(args, plotDataframe.T, path)
+    plots.stack_barplot(sigCelltypedf, args, plotDataframe, path)
     #return plotDataframe
 
 

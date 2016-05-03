@@ -120,29 +120,24 @@ def gene_based(args, resource_path, genenames, outdir):
     cellOccu = Occurrence.joincellsynonym(occuDF, cellSyn)
     if synonym:
         cellOccu = Occurrence.joingenesynonym(cellOccu, primarygene, geneSyn)
+
     # Reduced celltypes
-    if args.subcommand_name == 'genebased' and args.key_celltype_list:
+    if args.key_celltype_list:
         key_celltypes = FilesFolders.key_celltypes(resource_path)
         cellOccu = cellOccu[cellOccu['celltype'].isin(key_celltypes)]
-    # For exprbased
-    if args.subcommand_name == 'exprbased' and args.key_celltype_list:
-        key_celltypes = FilesFolders.key_celltypes(resource_path)
-        cellOccu = cellOccu[cellOccu['celltype'].isin(key_celltypes)]
+
     # print ('size of new df', len(cellOccu))
     cellOccu = cellOccu.set_index(cellOccu['celltype'])
     cellOccu = cellOccu.drop(['celltype'], axis=1)
     ocstop = timeit.default_timer()
     logging.info("TC in occurrence analysis:"+str(ocstop - ocstart)+'sec')
 
-    ## Subtract eg. cd4 t cell from t cell
-    #cellOccu = Occurrence.subtract_cellnamepeat(cellOccu, resource_path)
-    #cellOccu.to_csv(outdir + os.path.sep + 'GCAM_occurrence.csv', sep='\t', encoding='utf-8', ignore_index=True)
     # Scale df for heatmap and do further analysis
-
-    significanceDF = SignificanceTesting.SignificanceObject(cellOccu, binom_prob)
+    significanceDF = SignificanceTesting.SignificanceObject(cellOccu, binom_prob, resource_path, outdir)
     significanceDF.heatmapdf_create()
     significanceDF.plot_heatmap(outdir)
     significanceDF.fisher_occurrence_test()
+    significanceDF.data4radarplot()
     write_result(significanceDF, outdir, args)
     return significanceDF
 
@@ -164,14 +159,11 @@ def write_result(significanceDF, outdir, args):
         filtereddf = filter_df(cellgenedf)
         filtereddf.to_excel(os.path.join(outdir, 'GCAM_sigenes.xlsx'), index=False)
     else: print('No significant genes for celltype')
-    if args.subcommand_name == 'genebased':
-        sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 0.05]
-    else: sigCelltypedf = significanceDF.sigCelltypedf#[significanceDF.sigCelltypedf['q-val'] < 0.05]
-    #plots.stack_barplot(sigCelltypedf, outdir, key_celltypes)
+
+    sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 0.05]
     if len(sigCelltypedf) > 1:
         plots.plot_celltypesignificance(outdir, sigCelltypedf, args)
-    sigCelltypedf.sort_values('genecluster', ascending=True)
-    if len(sigCelltypedf)>0:
+        sigCelltypedf.sort_values('genecluster', ascending=True)
         sigCelltypedf.to_excel(os.path.join(outdir, 'GCAM_sigCelltypes.xlsx'), index=False)
     else: print('No significant celltypes')
 

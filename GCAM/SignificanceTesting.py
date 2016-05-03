@@ -4,6 +4,8 @@ import pandas as pd
 import scipy.stats as stats
 import os
 import logging, timeit
+from GCAM import FilesFolders as read
+from GCAM import plots
 
 
 
@@ -11,7 +13,9 @@ class SignificanceObject():
     '''
     This Object will hold dataframes used and created in analysis
     '''
-    def __init__(self, occurrencedf, binom_prob, heatmapdf=None):
+    def __init__(self, occurrencedf, binom_prob, resourcepath, outdir, heatmapdf=None):
+        self.outdir = outdir
+        self.resourcepath = resourcepath
         self.occurrencedf = occurrencedf
         self.binom_prob = binom_prob
         self.heatmapdf = heatmapdf
@@ -57,13 +61,22 @@ class SignificanceObject():
         hclustHeatmap.frame = self.filheatmapdf
         hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.svg'])
         fig, axm, axcb, cb = hclustHeatmap.plot()
-        '''
+
         ## seaborn heatmap
+        '''
         import seaborn as sns
         import matplotlib.pyplot as plt
-        sns.set()
+        print(self.filheatmapdf.shape)
+        xanoo = False
+        yanoo =False
+        if self.filheatmapdf.shape[0] < 50:xanoo = True
+        if self.filheatmapdf.shape[1] < 50:yanoo = True
+        sns.set(font="monospace")
         plt.figure(figsize=(20, 20))
-        g = sns.clustermap(self.filheatmapdf, vmax=100, vmin=0)
+        cmap = sns.diverging_palette(h_neg=210, h_pos=350, s=90, l=30, as_cmap=True)
+        g = sns.clustermap(self.filheatmapdf, vmax=50, vmin=0, cmap=cmap, xticklabels=xanoo, yticklabels=yanoo)
+        #plt.xlabel('celltypes')
+        #plt.ylabel('genes')
         plt.savefig(os.path.join(path, 'GCAM_heatmap_sns.svg'))
         plt.clf()
         plt.close()
@@ -168,9 +181,25 @@ class SignificanceObject():
                                                          self.adjpvaldf.loc[celltype, gene]]), ignore_index=True)
         #print cellgenedf.head(10)
         cellgenedf.columns = column
+        print('cellgenedf shape:', cellgenedf.shape)
+        #cellgenedf = self.filter_df(cellgenedf)
         self.cellgenedf = cellgenedf
+        print('cellgenedf shape after:', cellgenedf.shape)
         #self.filter_cellgenedf()  # Filter single cell multigene enrihment
         self.fisher_significant_celltypes()
+    '''
+    def filter_df(self, df):
+        new_df = pd.DataFrame(columns=df.columns)
+        df_gr = df.groupby('gene')
+        for k, gr in df_gr:
+            new_gr = gr.sort_values('p-val', ascending=True)
+            rows = 1
+            for i, r in new_gr.iterrows():
+                if rows <= 3:
+                    new_df = new_df.append(r)
+                    rows += 1
+        return new_df
+    '''
 
     def fisher_significant_celltypes(self):
         '''
@@ -211,6 +240,36 @@ class SignificanceObject():
         self.sigCelltypedf = sigcelltype
         fsstop = timeit.default_timer()
         logging.info('TC in sig celltype test:'+str(fsstop-fsstart)+'sec')
+
+
+    def data4radarplot(self):
+        '''
+        Preparing data for radar plot
+        '''
+        import numpy as np
+        tissue = []
+        genes = []
+        sigCelltypedf = self.sigCelltypedf
+        cell2tissue = read.cell2tissue_DB(self.resourcepath)
+        #print(cell2tissue.head(3))
+        cell2tissue['genes'] = 0
+        for k, v in sigCelltypedf.iterrows():
+            if v['celltype'] in list(cell2tissue.index):
+                cell2tissue.loc[v['celltype'], 'genes'] = v['genecluster']
+
+        norm_cell2gene = cell2tissue['tissue'].value_counts()
+        #print(norm_cell2gene)
+        df_cell_gr = cell2tissue.groupby('tissue')
+        for cell in df_cell_gr.groups:
+            #print(cell)
+            df = df_cell_gr.get_group(cell)
+            tissue.append(cell)
+            genes.append((sum(df['genes'])*1.)/norm_cell2gene.loc[cell])
+        gene2plot = np.divide(genes, sum(genes))
+        #print(gene2plot, tissue, self.outdir)
+        plots.plot_radar(gene2plot, tissue, self.outdir)
+
+
 
 def scale(val, src, dst):
     '''

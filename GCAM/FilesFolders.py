@@ -55,6 +55,20 @@ def celltype_DB(path):
     return cellDB
 
 
+def cell2tissue_DB(path):
+    '''
+    Import celltype database.
+    :param path:
+    :return:
+    '''
+    try:
+        cell2tissue = read_csv(os.path.join(path, 'cell2tissue.txt'), header=0, sep='\t', index_col=0)
+    except:
+        raise ValueError("cell2tissue db does not exist.")
+    #print cellDB
+    return cell2tissue
+
+
 def cell_synonym(path):
     '''
     Import cell synonym database.
