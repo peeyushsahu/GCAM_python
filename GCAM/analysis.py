@@ -134,10 +134,7 @@ def gene_based(args, resource_path, genenames, outdir):
 
     # Scale df for heatmap and do further analysis
     significanceDF = SignificanceTesting.SignificanceObject(cellOccu, binom_prob, resource_path, outdir)
-    significanceDF.heatmapdf_create()
-    significanceDF.plot_heatmap(outdir)
     significanceDF.fisher_occurrence_test()
-    significanceDF.data4radarplot()
     write_result(significanceDF, outdir, args)
     return significanceDF
 
@@ -163,6 +160,9 @@ def write_result(significanceDF, outdir, args):
     sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 0.05]
     if len(sigCelltypedf) > 1:
         plots.plot_celltypesignificance(outdir, sigCelltypedf, args)
+        significanceDF.heatmapdf_create()
+        significanceDF.plot_heatmap(outdir)
+        significanceDF.data4radarplot()
         sigCelltypedf.sort_values('genecluster', ascending=True)
         sigCelltypedf.to_excel(os.path.join(outdir, 'GCAM_sigCelltypes.xlsx'), index=False)
     else: print('No significant celltypes')

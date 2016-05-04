@@ -43,7 +43,7 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
     #reload(sys.modules['sompy'])
     sm = SOM.SOM('sm', Data, mapsize=[msz0, msz1], norm_method='var', initmethod='pca')
     sm.train(n_job=1, shared_memory='no', verbose='final', trainlen=iteration)
-    sm.view_map(text_size=9, save='Yes', save_dir=os.path.join(path, '2d_plot.png'))
+    sm.view_map(text_size=9, save='Yes')#, save_dir=os.path.join(path, '2d_plot.png')
     #sm.hit_map(path)
     #labels = sm.cluster(method='Kmeans', n_clusters=9)
     #cents = sm.hit_map_cluster_number(path)
@@ -112,7 +112,7 @@ def clusterplot(df_dict, path, foldDifference):
     '''
     import matplotlib.pyplot as plt
     fig, axes = plt.subplots(nrows=5, ncols=5)
-    fig.set_size_inches(18.5, 10.5)
+    fig.set_size_inches(10.5, 8.5)
     row = 0
     col = 0
     for i, v in df_dict.items():
@@ -126,81 +126,18 @@ def clusterplot(df_dict, path, foldDifference):
                 row = 0
                 col += 1
             if i == 24: break
+    plt.xticks(rotation=45)
     fig.tight_layout()
     fig.savefig(os.path.join(path, 'GCAM_cluster_expression.png'))
     fig.clf()
 
 
-def find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clustersize, args):
-    '''
-    This function will give common significant genes from each celltype by camparing different celltype classes.
-    to one celltype.
-    :param significanceDF:
-    :return:
-    '''
-    sigCelltype = sigCelltypedf
-    sigGene = cellgenedf
-    cellType = []
-    sigCelltype = sigCelltype.sort_values('p-val', ascending=True)
-    for k, v in sigCelltype.iterrows():
-        if v['genecluster'] > clustersize: # and v['p-val'] <= 0.05
-            cellType.append(v['celltype'])
-
-    sigGene_group = sigGene.groupby('celltype')
-    combination = []
-    genelist4expr = {}
-    for cell, df in sigGene_group:
-        if cell in cellType:
-            #print cell, len(df)
-            for cell1, df1 in sigGene_group:
-                if cell1 != cell and cell1 in cellType:
-                    #print cell1, len(df1)
-                    if not any([cell1, cell] == x for x in combination):
-                        combination.append([cell, cell1])
-                        in_data1_data2 = list(set(df['gene']).intersection(df1['gene']))
-                        for gene in in_data1_data2:
-                            genelist4expr.setdefault(cell, []).append(gene)
-                            genelist4expr.setdefault(cell1, []).append(gene)
-    #print combination
-    for k, v in genelist4expr.items():
-        genelist4expr[k] = list(set(v))
-    #print genelist4expr
-    return geneList4expr(sigCelltypedf, cellgenedf, clustersize, args)
-    #return find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clustersize, args)
-
-
-def geneList4expr(sigCelltypedf, cellgenedf, clustersize, args):
-    sigCelltype = sigCelltypedf
-    sigGene = cellgenedf
-    cellType = []
-    sigCelltype = sigCelltype.sort_values('p-val', ascending=True)
-    for k, v in sigCelltype.iterrows():
-        if v['genecluster'] > clustersize: # and v['p-val'] <= 0.05
-            cellType.append(v['celltype'])
-    genelist4expr = dict((k, []) for k in cellType)
-    sigGene_group = sigGene.groupby('gene')
-    for gene, df in sigGene_group:
-        df = df.sort_values('p-val', ascending=True)
-        for k, v in df.iterrows():
-            if v['celltype'] in cellType:
-                genelist4expr[v['celltype']].append(v['gene'])
-                break
-    print(args.outdir)
-    myfile = open(os.path.join(args.outdir, 'celltypeSign_new.txt'), 'w')
-    myfile.write('celltype'+'\t'+'genes')
-    for k, v in genelist4expr.items():
-        myfile.write('\n'+k+'\t'+','.join(v))
-    myfile.close()
-    return genelist4expr
-
-
-
-
+'''
 def find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clusterSize, args):
-    '''
+
     Find for which celltype a overlap gene is significant
     :return:
-    '''
+
     sigCelltype = sigCelltypedf
     sigGene = cellgenedf
     cellType = genelist4expr.keys()
@@ -235,16 +172,14 @@ def find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clust
 
     for cell, sigGenes in dict4sortedGenes.iteritems():
         dict4sortedGenes[cell] = list(set(sigGenes))
-        # print cell, len(sigGenes)
-    #print("Genes/celltype after filtering:")
-    #for key, cell in dict4sortedGenes.iteritems():
-        #print(key, len(cell))
+
     myfile = open(os.path.join(args.outdir, 'celltypeSign_old.txt'), 'w')
     myfile.write('celltype'+'\t'+'genes')
     for k, v in dict4sortedGenes.iteritems():
         myfile.write('\n'+k+'\t'+','.join(v))
     myfile.close()
     return dict4sortedGenes
+'''
 
 
 def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=None, clusterSize=20):
@@ -269,10 +204,11 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
     if userCelltype is None:
         sigCelltypedf = significanceDF.sigCelltypedf
         sigCelltypedf = sigCelltypedf[sigCelltypedf['genecluster'] > clusterSize]
+        #print(sigCelltypedf.shape)
 
     # if args.remOverlapping:
-    print('Removing overlapping genes')
-    gene2cellCluster = find_overlapGenefronSigcell(sigCelltypedf, cellgenedf, clusterSize, args)
+    print('Removing overlap genes')
+    gene2cellCluster = find_unique_gene4sigcell(sigCelltypedf, cellgenedf, clusterSize, args)
     cellexpr_dict = OrderedDict()
     for celltype, genelist in gene2cellCluster.items():
         if len(genelist) > 10:  # Minimum genes per celltype for comparision
@@ -291,6 +227,45 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
         print("mean as control.")
         return mean_coffi4exprdf(sigCelltypedf, expr, path, args)
     return coffi4exprdf(sigCelltypedf, expr, path, args, control=control)
+
+
+def find_unique_gene4sigcell(sigCelltypedf, cellgenedf, clustersize, args):
+    import collections
+    '''
+    This function will give common significant genes from each celltype by camparing different celltype classes.
+    to one celltype.
+    :param significanceDF:
+    :return:
+    '''
+    sigCelltype = sigCelltypedf
+    sigGene = cellgenedf
+    cellType = []
+    sigCelltype = sigCelltype.sort_values('p-val', ascending=True)
+    for k, v in sigCelltype.iterrows():
+        if v['genecluster'] > clustersize: # and v['p-val'] <= 0.05
+            cellType.append(v['celltype'])
+    print(cellType)
+    sigGene_group = sigGene.groupby('gene')
+    # Use defaultdict because in normal dict append to list doesnot work.
+    genelist4expr = collections.defaultdict(list)
+    for gene, df in sigGene_group:
+        #print(gene)
+        df = df.sort_values('p-val', ascending=True)
+        for k, v in df.iterrows():
+            #print(v['celltype'])
+            if v['celltype'] in cellType:
+                if len(genelist4expr[v['celltype']]) < 30:
+                    #print(v)
+                    #print(genelist4expr[v['celltype']])
+                    genelist4expr.setdefault(v['celltype'],[]).append(v['gene'])
+                    break
+    #print(genelist4expr)
+    myfile = open(os.path.join(args.outdir, 'celltypeSign_new.txt'), 'w')
+    myfile.write('celltype'+'\t'+'genes')
+    for k, v in genelist4expr.items():
+        myfile.write('\n'+k+'\t'+','.join(v))
+    myfile.close()
+    return genelist4expr
 
 
 def coffi4exprdf(sigCelltypedf, expr, path, args, control=None):
@@ -334,8 +309,8 @@ def coffi4exprdf(sigCelltypedf, expr, path, args, control=None):
         for column in plotDataframe.columns:
             plotDataframe.loc[:,column] = (plotDataframe.loc[:,column]/sum(plotDataframe.loc[:,column]))
     ## plotting stacked bar plot
-    plots.heatmap_Sigcelltype(args, plotDataframe.T, path)
-    plots.stack_barplot(sigCelltypedf, args, plotDataframe, path, name=control)
+    plots.heatmap_Sigcelltype(args, plotDataframe, path)
+    plots.stack_barplot(sigCelltypedf, args, plotDataframe, path)
     #return plotDataframe
 
 def mean_coffi4exprdf(sigCelltypedf, expr, path, args):
@@ -381,7 +356,7 @@ def mean_coffi4exprdf(sigCelltypedf, expr, path, args):
         for column in plotDataframe.columns:
             plotDataframe.loc[:,column] = (plotDataframe.loc[:,column]/sum(plotDataframe.loc[:,column]))
     ## plotting stacked bar plot
-    plots.heatmap_Sigcelltype(args, plotDataframe.T, path)
+    plots.heatmap_Sigcelltype(args, plotDataframe, path)
     plots.stack_barplot(sigCelltypedf, args, plotDataframe, path)
     #return plotDataframe
 
@@ -401,7 +376,7 @@ def plot_expressionvseignificance(path, plotdf):
     name = plotdf['celltype'].tolist()
     area = [(math.log(x, 10) * -15) for x in t]
     color = np.random.random(len(t))
-
+    #plt.figure(figsize=[15,15])
     plt.scatter(l, s, s=area, c=color, alpha=0.5)
     plt.grid(True, linestyle=':', color='black')
     # draw a thick red hline at y=0 that spans the xrange
@@ -432,3 +407,4 @@ def plot_expressionvseignificance(path, plotdf):
     #plt.tight_layout()
     plt.savefig(path + os.path.sep + 'GCAM_celltype_VS_expresiion.png')
     plt.clf()
+    plt.close()

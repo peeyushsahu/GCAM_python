@@ -348,8 +348,8 @@ def plot_radar(gene2plot, tissue, path):
     #plt.rgrids([0.1, 0.2, 0.3, 0.4])
     ax.set_title('Fraction of gene', weight='bold', size='medium', position=(0.5, 1.1),
                  horizontalalignment='center', verticalalignment='center')
-    ax.plot(theta, data, color='b', lw=1)
-    ax.fill(theta, data, facecolor='b', alpha=0.25)
+    ax.plot(theta, data, color='r', lw=1)
+    ax.fill(theta, data, facecolor='r', alpha=0.25)
     ax.set_varlabels(spoke_labels)
     plt.figtext(0.5, 0.965, 'Gene enrichment fraction for (tissue)* types',
                 ha='center', color='black', weight='bold', size='large')
@@ -411,7 +411,7 @@ def stack_barplot(sigCelltypedf, args, plotdf, path):
     plt.xlim(-0.2,len(df1.columns))
     plt.xticks(ind + width/2. + 0.05, list(df1.columns), rotation=45)
     plt.yticks(np.arange(0, 1, 0.1))
-    lgd = plt.legend(tuple(handls[::-1]), tuple(list(df1.index)), loc='center right', bbox_to_anchor=(1.23, 0.5))
+    lgd = plt.legend(tuple(handls[::-1]), tuple(list(df1.index)), loc='center right', bbox_to_anchor=(1.2, 0.5))
     plt.tick_params(direction='out')
     plt.tight_layout()
     plt.savefig(os.path.join(path, 'GCAM_stacks.svg'), bbox_extra_artists=(lgd, ), bbox_inches='tight')
@@ -441,6 +441,7 @@ def heatmap_Sigcelltype(args, df, path):
                 #print(c, val)
                 new_df.loc[k, c] = val
         # plotting df
+        new_df = new_df.T
         sns.set_context("talk")
         cmap = sns.diverging_palette(255, 15, sep=20, n=3, as_cmap=True)
         plt.clf()
@@ -453,6 +454,7 @@ def heatmap_Sigcelltype(args, df, path):
         plt.close()
     else:
         # creating df for heatmap
+        df = df.T
         sns.set_context("talk")
         cmap = sns.diverging_palette(255, 15, sep=20, n=3, as_cmap=True)
         plt.clf()
@@ -744,6 +746,8 @@ def stackedBarPlot(ax,                                 # axes to plot onto
 '''
 
 #########################################
+
+
 def plot_celltypesignificance(path, plotdf, args):
     import matplotlib.pyplot as plt
     import numpy as np
@@ -765,7 +769,7 @@ def plot_celltypesignificance(path, plotdf, args):
     plt.grid(True, linestyle=':', color='black')
 
     # draw a thick red hline at y=0 that spans the xrange
-    h = plt.axhline(linewidth=1, color='r', y=5, linestyle='--') #y=args.celltypeClusterSize
+    h = plt.axhline(linewidth=1, color='r', y=np.log2(args.celltypeClusterSize), linestyle='--') #y=args.celltypeClusterSize
 
     for i in range(0, len(t)):
         plt.annotate(name[i], xy=(s[i], l[i]), xycoords='data',
