@@ -62,27 +62,6 @@ class SignificanceObject():
         hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.svg'])
         fig, axm, axcb, cb = hclustHeatmap.plot()
 
-        ## seaborn heatmap
-        '''
-        import seaborn as sns
-        import matplotlib.pyplot as plt
-        print(self.filheatmapdf.shape)
-        xanoo = False
-        yanoo =False
-        if self.filheatmapdf.shape[0] < 50:xanoo = True
-        if self.filheatmapdf.shape[1] < 50:yanoo = True
-        sns.set(font="monospace")
-        plt.figure(figsize=(20, 20))
-        cmap = sns.diverging_palette(h_neg=210, h_pos=350, s=90, l=30, as_cmap=True)
-        g = sns.clustermap(self.filheatmapdf, vmax=50, vmin=0, cmap=cmap, xticklabels=xanoo, yticklabels=yanoo)
-        #plt.xlabel('celltypes')
-        #plt.ylabel('genes')
-        plt.savefig(os.path.join(path, 'GCAM_heatmap_sns.svg'))
-        plt.clf()
-        plt.close()
-        '''
-
-
     def filter_occuDf(self):
         '''
         Filter occurrence df for removing gene wid less than 5 celltype tags
@@ -187,19 +166,6 @@ class SignificanceObject():
         print('cellgenedf shape after:', cellgenedf.shape)
         #self.filter_cellgenedf()  # Filter single cell multigene enrihment
         self.fisher_significant_celltypes()
-    '''
-    def filter_df(self, df):
-        new_df = pd.DataFrame(columns=df.columns)
-        df_gr = df.groupby('gene')
-        for k, gr in df_gr:
-            new_gr = gr.sort_values('p-val', ascending=True)
-            rows = 1
-            for i, r in new_gr.iterrows():
-                if rows <= 3:
-                    new_df = new_df.append(r)
-                    rows += 1
-        return new_df
-    '''
 
     def fisher_significant_celltypes(self):
         '''

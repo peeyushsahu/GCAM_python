@@ -94,6 +94,10 @@ def warnings(args):
             if not args.meanAsControl:
                 logging.error("Control sample name is not selected.")
                 raise ValueError("Please specify control sample name OR set --meanAsControl, -m")
+        if not args.controlsample is None:
+            if args.meanAsControl:
+                logging.error("Control sample selected and meanascontrol is on")
+                raise ValueError("Control sample selected, remove --meanAsControl or -m")
         userCelltype = args.selectCelltypes
         if userCelltype is not None:
             userCelltype = [x.strip() for x in userCelltype.split(',')]

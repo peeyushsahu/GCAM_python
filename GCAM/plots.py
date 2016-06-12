@@ -368,7 +368,7 @@ def stack_barplot(sigCelltypedf, args, plotdf, path):
         sigCelltypedf = sigCelltypedf.sort_values('p-val', ascending=True)
         celltypes = 0
         for k, v in sigCelltypedf.iterrows():
-            if v['genecluster'] > 20 and celltypes < 15:
+            if (v['genecluster'] > 20) and (celltypes < 15) and (v['celltype'] in list(plotdf.index)):
                 plotDF = plotDF.append(plotdf.loc[v['celltype']])
             celltypes += 1
     else:
@@ -377,14 +377,17 @@ def stack_barplot(sigCelltypedf, args, plotdf, path):
     plotDF = plotDF.sort_index(axis=0, ascending=True)
     # Join three palette in case of more than 8 items
     if len(plotDF) > 8:
-        d_colors = sns.color_palette("hls", 8)
-        d_colors1 = sns.hls_palette(8, l=.3, s=.9)
-        d_colors2 = sns.hls_palette(8, l=.5, s=1)
+        d_colors = sns.hls_palette(8, l=.3, s=.7)
+        d_colors.pop(3)
+        d_colors1 = sns.hls_palette(8, l=.5, s=1)
+        d_colors1.pop(3)
+        d_colors2 = sns.hls_palette(8, l=.7, s=.8)
+        d_colors2.pop(3)
         n_d_colors = []
         for i in range(0,len(d_colors)):
             n_d_colors.append(d_colors[i])
+            n_d_colors.append(d_colors1[i])
             n_d_colors.append(d_colors2[i])
-            #n_d_colors.append(d_colors2[i])
             #print(len(n_d_colors))
     else:
         n_d_colors = sns.color_palette("hls", 8)
@@ -466,285 +469,6 @@ def heatmap_Sigcelltype(args, df, path):
         plt.savefig(os.path.join(path, 'GCAM_cofficients.pdf'))
         plt.close()
 
-
-'''
-def stack_barplot(args, sigcelltype, path, name='_', method='genebased'):
-    #print 'Key_celltypes', key_celltypes
-    d_labels = ["celltype"]
-    d_widths = [0.1]
-    stackplot_data = []
-    d_colors = ['#006699', '#33D6AD', '#CCFF33', '#0033CC', '#FFFF00', '#009900', '#CC3300', '#FFCC99',
-                '#99CCFF', '#CC6699', '#CC99FF', '#6600FF', '#CD853F', '#FFC0CB', '#FF9900', '#B0E0E6',
-                '#800080', '#663399', '#70dd3e', '#BC8F8F', '#4169E1', '#8B4513', '#FA8072', '#F4A460',
-                '#2E8B57', '#ffc8a2','#00FF00', '#FFFF66', '#191919', '#bcffad']
-    if method == 'genebased' and not args.key_celltypes:
-        if len(sigcelltype) > 15: sigcelltype = sigcelltype[:15]
-        cells = [1.0]*len(sigcelltype)
-        number_label = float(len(sigcelltype))
-        adjustment = 0.02
-        plot_color = d_colors[:len(cells)]
-        #print sigcelltype
-        #if method == 'genebased':
-        genes = [0.0]*len(cells)
-        stackplot_data.append(cells)
-        sigcelltype = sigcelltype.sort(['P-val'], ascending=True)
-        sigcelltype.index = range(0, len(sigcelltype))
-        cell_type = sigcelltype['celltype']
-        for ind, row in sigcelltype.iterrows():
-            genes[ind] = float(row['genecluster'])
-        stackplot_data.insert(0, genes)
-        d_labels.insert(0, 'sample')
-        d_widths.insert(0, 0.5)
-
-    if not args.key_celltype_list and method == 'exprbased':
-        #if len(sigcelltype) > 15: sigcelltype = sigcelltype[:15]
-        cells = [1.0]*len(sigcelltype)
-        number_label = float(len(sigcelltype))
-        adjustment = 0.02
-        plot_color = d_colors[:len(cells)]
-        cell_type = list(sigcelltype.index)
-        #print cell_type
-        #print sigcelltype
-        stackplot_data.append(cells)
-        #cols = [col for col in sigcelltype.columns if 'FC' in col]
-        #print sigcelltype.columns
-        for col in sigcelltype.columns:
-            genes = [0.0]*len(cells)
-            for i, r in sigcelltype.iterrows():
-                #print i
-                ind = cell_type.index(i)
-                genes[ind] = float(r[col])
-            stackplot_data.insert(0, genes)
-            d_labels.insert(0, col)
-            d_widths.insert(0, 0.5)
-            #print stackplot_data
-    else:
-        cell_type = ['macrophage', 'Alveolar macrophage',
-                     'm1 macrophage','m2 macrophage', 'monocyte', 'dendritic cell', 'glial cell',
-                     'neutrophil', 'mast cell', 'Natural killer cell', 'Kupffer cell', 'Plasma cell',
-                     'eosinophil', 'naive B cell', 'memory B cell', 'B lymphocyte', 'T lymphocyte',
-                     'naive T cell', 'memory T cell', 'CD8 T cell', 'CD4 T cell', 'regulatory T cell','Cytotoxic T cell',
-                     'helper T cell']
-        d_colors = ['#009688', '#35a79c', '#54b2a9', '#83d0c9', '#ffdaaf',
-                    '#ff9237', '#eb5300', '#8d8282', '#bbbbbb', '#f5f8ee', '#feffc3',
-                    '#fcff83', '#f9e909', '#fe2e2e', '#cb2424', '#b62020', '#e18f8f', '#fcbbbb',
-                    '#efbbff','#d896ff', '#be29ec','#800080', '#660066', '#470047']
-
-        cells = [1.0]*len(cell_type)
-        number_label = float(len(cell_type))
-        adjustment = 0.02
-        plot_color = d_colors[:len(cells)]
-        cell_type = list(map(str.lower, cell_type))
-
-        if method == 'genebased':
-            stackplot_data.append(cells)
-            genes = [0.0]*len(cells)
-            for i, r in sigcelltype.iterrows():
-                ind = cell_type.index(r['celltype'])
-                genes[ind] = float(r['genecluster'])
-            stackplot_data.insert(0, genes)
-            d_labels.insert(0, 'sample')
-            d_widths.insert(0, 0.5)
-        if method == 'exprbased':
-            stackplot_data.append(cells)
-            #cols = [col for col in sigcelltype.columns if 'FC' in col]
-            for col in sigcelltype.columns:
-                genes = [0.0]*len(cells)
-                for i, r in sigcelltype.iterrows():
-                    #print(i)
-                    ind = cell_type.index(i)
-                    genes[ind] = float(r[col])
-                stackplot_data.insert(0, genes)
-                d_labels.insert(0, col)
-                d_widths.insert(0, 0.5)
-    #print stackplot_data
-    #print d_labels
-    stplot = np.array(stackplot_data) #[genes, cells] stackplot list of list
-    gap = 0.01
-    fig = plt.figure(figsize=(11,8))
-    ax6 = fig.add_subplot(111)
-    stackedBarPlot(ax6,
-                    stplot,
-                    plot_color,
-                    cell_type,
-                    number_label,
-                    adjustment,
-                    edgeCols=['#ffffff']*int(number_label),
-                    xLabels=d_labels,
-                    scale=True,
-                    gap=gap,
-                    endGaps=True,
-                    widths=d_widths
-                    )
-    plt.title("Relative abundance of celltype")
-    plt.setp(ax6.xaxis.get_majorticklabels(), rotation=90)
-    #fig.subplots_adjust(bottom=0.4)
-    plt.tight_layout()
-    plt.savefig(os.path.join(path, 'GCAM_'+method+'_stacks'+name+'.svg'))
-    plt.clf()
-    #return
-
-
-def stackedBarPlot(ax,                                 # axes to plot onto
-                   data,                               # data to plot
-                   cols,                               # colors for each level
-                   cell_type,
-                   no_label,
-                   adjustment,
-                   xLabels = None,                     # bar specific labels
-                   yTicks = 6.0,                        # information used for making y ticks ["none", <int> or [[tick_pos1, tick_pos2, ... ],[tick_label_1, tick_label2, ...]]
-                   edgeCols=None,                      # colors for edges
-                   showFirst=-1,                       # only plot the first <showFirst> bars
-                   scale=False,                        # scale bars to same height
-                   widths=None,                        # set widths for each bar
-                   heights=None,                       # set heights for each bar
-                   ylabel='',                          # label for x axis
-                   xlabel='',                          # label for y axis
-                   gap=0.,                             # gap between bars
-                   endGaps=False                       # allow gaps at end of bar chart (only used if gaps != 0.)
-                   ):
-
-# data fixeratering
-
-    # make sure this makes sense
-    if showFirst != -1:
-        showFirst = np.min([showFirst, np.shape(data)[0]])
-        data_copy = np.copy(data[:showFirst]).transpose().astype('float')
-        data_shape = np.shape(data_copy)
-        if heights is not None:
-            heights = heights[:showFirst]
-        if widths is not None:
-            widths = widths[:showFirst]
-        showFirst = -1
-    else:
-        data_copy = np.copy(data).transpose()
-    data_shape = np.shape(data_copy)
-
-    # determine the number of bars and corresponding levels from the shape of the data
-    num_bars = data_shape[1]
-    levels = data_shape[0]
-
-    if widths is None:
-        widths = np.array([1] * num_bars)
-        x = np.arange(num_bars)
-    else:
-        x = [0]
-        for i in range(1, len(widths)):
-            x.append(x[i-1] + (widths[i-1] + widths[i])/2)
-
-    # stack the data --
-    # replace the value in each level by the cumulative sum of all preceding levels
-    data_stack = np.reshape([float(i) for i in np.ravel(np.cumsum(data_copy, axis=0))], data_shape)
-
-    # scale the data is needed
-    if scale:
-        data_copy /= data_stack[levels-1]
-        data_stack /= data_stack[levels-1]
-        if heights is not None:
-            print("WARNING: setting scale and heights does not make sense.")
-            heights = None
-    elif heights is not None:
-        data_copy /= data_stack[levels-1]
-        data_stack /= data_stack[levels-1]
-        for i in np.arange(num_bars):
-            data_copy[:,i] *= heights[i]
-            data_stack[:,i] *= heights[i]
-
-#------------------------------------------------------------------------------
-# ticks
-
-    if yTicks is not "none":
-        # it is either a set of ticks or the number of auto ticks to make
-        real_ticks = True
-        try:
-            k = len(yTicks[1])
-        except:
-            real_ticks = False
-
-        if not real_ticks:
-            yTicks = float(yTicks)
-            if scale:
-                # make the ticks line up to 100 %
-                y_ticks_at = np.arange(yTicks)/(yTicks-1)
-                y_tick_labels = np.array(["%0.2f"%(i * 100) for i in y_ticks_at])
-            else:
-                # space the ticks along the y axis
-                y_ticks_at = np.arange(yTicks)/(yTicks-1)*np.max(data_stack)
-                y_tick_labels = np.array([str(i) for i in y_ticks_at])
-            yTicks=(y_ticks_at, y_tick_labels)
-
-#------------------------------------------------------------------------------
-# plot
-
-    if edgeCols is None:
-        edgeCols = ["none"]*len(cols)
-
-    # take cae of gaps
-    gapd_widths = [i - gap*2 if(widths.index(i) == len(widths)-1) else i-gap*2 for i in widths]
-    #print gapd_widths
-
-    # bars
-    ax.bar(x,
-           data_stack[0],
-           color=cols[0],
-           edgecolor=edgeCols[0],
-           width=gapd_widths,
-           linewidth=0.5,
-           align='center'
-           )
-
-    for i in np.arange(1,levels):
-        ax.bar(x,
-               data_copy[i],
-               bottom=data_stack[i-1],
-               color=cols[i],
-               edgecolor=edgeCols[i],
-               width=gapd_widths,
-               linewidth=0.5,
-               align='center'
-               )
-
-    # borders
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["bottom"].set_visible(False)
-    #ax.spines["left"].set_visible(False)
-
-    # make ticks if necessary
-    if yTicks is not "none":
-        ax.tick_params(axis='y', which='both', labelsize=8, direction="out")
-        ax.yaxis.tick_left()
-        plt.yticks(yTicks[0], ['0%','20%','40%','60%','80%','100%'])
-
-        # second y-axis for cell_type annotation
-        ax2 = ax.twinx()
-        ax2.tick_params(axis='y', which='both', labelsize=10, direction='in')
-        ax2.yaxis.tick_right()
-        plt.yticks(np.arange(no_label)/(no_label)+adjustment, cell_type)
-    else:
-        plt.yticks([], [])
-
-    if xLabels is not None:
-        ax.tick_params(axis='x', which='both', labelsize=8, direction="out")
-        ax.xaxis.tick_bottom()
-        plt.xticks(x, xLabels)
-    else:
-        plt.xticks([], [])
-
-    # limits
-    if endGaps:
-        ax.set_xlim(-1.*widths[0]/2. - gap/2., np.sum(widths)-widths[0]/2. + gap/2.)
-    else:
-        ax.set_xlim(-1.*widths[0]/2. + gap/2., np.sum(widths)-widths[0]/2. - gap/2.)
-    ax.set_ylim(0, yTicks[0][-1])#np.max(data_stack))
-
-    # labels
-    if xlabel != '':
-        plt.xlabel(xlabel)
-    if ylabel != '':
-        plt.ylabel(ylabel)
-'''
-
 #########################################
 
 
@@ -769,7 +493,9 @@ def plot_celltypesignificance(path, plotdf, args):
     plt.grid(True, linestyle=':', color='black')
 
     # draw a thick red hline at y=0 that spans the xrange
-    h = plt.axhline(linewidth=1, color='r', y=np.log2(args.celltypeClusterSize), linestyle='--') #y=args.celltypeClusterSize
+    thres = np.log2(args.celltypeClusterSize)
+    if thres < min(l): thres = min(l)
+    h = plt.axhline(linewidth=1, color='r', y=thres, linestyle='--') #y=args.celltypeClusterSize
 
     for i in range(0, len(t)):
         plt.annotate(name[i], xy=(s[i], l[i]), xycoords='data',

@@ -43,7 +43,7 @@ def SOMclustering(Data, pheno_data, path, foldDifference, iteration = 100, gridS
     #reload(sys.modules['sompy'])
     sm = SOM.SOM('sm', Data, mapsize=[msz0, msz1], norm_method='var', initmethod='pca')
     sm.train(n_job=1, shared_memory='no', verbose='final', trainlen=iteration)
-    sm.view_map(text_size=9, save='Yes')#, save_dir=os.path.join(path, '2d_plot.png')
+    sm.view_map(text_size=9, save='no')#, save_dir=os.path.join(path, '2d_plot.png')
     #sm.hit_map(path)
     #labels = sm.cluster(method='Kmeans', n_clusters=9)
     #cents = sm.hit_map_cluster_number(path)
@@ -111,75 +111,28 @@ def clusterplot(df_dict, path, foldDifference):
     :return:
     '''
     import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(nrows=5, ncols=5)
-    fig.set_size_inches(10.5, 8.5)
+    import numpy as np
+    fig, axes = plt.subplots(nrows=5, ncols=5, figsize=(10.5, 8.5))
     row = 0
     col = 0
     for i, v in df_dict.items():
         fpkms = v.mean(axis=0)
+        v = v.drop('Symbol', axis=1)
+        #print(v.head())
+        v = np.array(v)
         if abs(max(fpkms)/min(fpkms)) >= foldDifference:
-            v.boxplot(ax=axes[row,col], fontsize=7)
+            axes[row,col].boxplot(v)
             axes[row,col].set_title('Size:'+str(len(v)), fontsize=10)
             row += 1
             #print row, col
             if row == 5:
                 row = 0
                 col += 1
-            if i == 24: break
-    plt.xticks(rotation=45)
+            if col == 5: break
+    #plt.xticks(rotation=45)
     fig.tight_layout()
     fig.savefig(os.path.join(path, 'GCAM_cluster_expression.png'))
     fig.clf()
-
-
-'''
-def find_sigCelltype4overlapGene(genelist4expr, sigCelltypedf, cellgenedf, clusterSize, args):
-
-    Find for which celltype a overlap gene is significant
-    :return:
-
-    sigCelltype = sigCelltypedf
-    sigGene = cellgenedf
-    cellType = genelist4expr.keys()
-    dict4sortedGenes = {}
-    gene2cell_group = sigGene.groupby('celltype')
-    # print genelist4expr
-    # Check in celltype sig. table for sig cell type.
-    if len(sigCelltype[sigCelltype['genecluster'] > clusterSize]) < 3:
-        sys.exit('Warning: Less than 3 cell-types are above cluster size. '
-                 'Please choose a lower threshold for Cluster size for significant cell-type.')
-    for k, v in sigCelltype.iterrows():
-        if v['genecluster'] > clusterSize:  # and v['p-val'] <= 0.05
-            # print ('Celltype above cluster size:', v['celltype'], v['p-val'], v['genecluster'])
-            df = gene2cell_group.get_group(v['celltype'])
-            # Take the sig cell type and get genes associated to it.
-            for key, val in df.iterrows():
-                # check if the associated genes are in the overlaping list
-                if val['gene'] not in genelist4expr[v['celltype']]:
-                    dict4sortedGenes.setdefault(v['celltype'], []).append(val['gene'])
-                else:
-                    # gene in a overapping list test which celltype has the most significant pval for the gene.
-                    celltype = None; enrichment = 0
-                    for sigcell in cellType:
-                        gene_ind = gene2cell_group.get_group(sigcell)
-                        if val['gene'] in list(gene_ind['gene']):
-                            ind = gene_ind['gene'][gene_ind['gene'] == val['gene']].index[0]
-                            if gene_ind.loc[ind, 'enrichment'] > enrichment:
-                                enrichment = gene_ind.loc[ind, 'enrichment']
-                                celltype = sigcell
-                                # print sigcell, pval
-                    if celltype is not None: dict4sortedGenes.setdefault(celltype, []).append(val['gene'])
-
-    for cell, sigGenes in dict4sortedGenes.iteritems():
-        dict4sortedGenes[cell] = list(set(sigGenes))
-
-    myfile = open(os.path.join(args.outdir, 'celltypeSign_old.txt'), 'w')
-    myfile.write('celltype'+'\t'+'genes')
-    for k, v in dict4sortedGenes.iteritems():
-        myfile.write('\n'+k+'\t'+','.join(v))
-    myfile.close()
-    return dict4sortedGenes
-'''
 
 
 def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=None, clusterSize=20):
@@ -242,9 +195,9 @@ def find_unique_gene4sigcell(sigCelltypedf, cellgenedf, clustersize, args):
     cellType = []
     sigCelltype = sigCelltype.sort_values('p-val', ascending=True)
     for k, v in sigCelltype.iterrows():
-        if v['genecluster'] > clustersize: # and v['p-val'] <= 0.05
+        if (v['genecluster'] > clustersize) and (v['FDR'] <= 0.05):
             cellType.append(v['celltype'])
-    print(cellType)
+    #print(cellType)
     sigGene_group = sigGene.groupby('gene')
     # Use defaultdict because in normal dict append to list doesnot work.
     genelist4expr = collections.defaultdict(list)

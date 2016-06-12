@@ -77,8 +77,6 @@ def occurrence_df(genenames, resource_path, subquery):
         new_genenames = genenames
     print ('Reading required DBs')
     occuDF = cellDB
-    fetch_time = 0
-    occu_time = 0
     total_abstract = 0
     abs_in_DB = 0
     count = 0 + len(new_genenames)
@@ -86,19 +84,12 @@ def occurrence_df(genenames, resource_path, subquery):
         sys.stdout.write("\rGenes remain for analyse:%d" % count)
         sys.stdout.flush()
         #print gene
-        fstart = timeit.default_timer()
         GeneObj = Fetch_pmids.Genes(gene=gene, subquery=subquery, resource_path=resource_path)
         GeneObj.get_pmids()
-        fstop = timeit.default_timer()
-        fetch_time = fetch_time + (fstop - fstart)
         total_abstract += len(GeneObj.pmids) # calcuate total no of abstracts
-
-        ostart = timeit.default_timer()
         GeneObj.get_pmid_pos(annoDB=annDB)
         abs_in_DB += len(GeneObj.cellinpmid)
         occuDF = GeneObj.get_occurrence(cellDB=occuDF)
-        ostop = timeit.default_timer()
-        occu_time = occu_time + (ostop - ostart)
         count -= 1
     joincellsynonym(occuDF, resource_path)
     if not created:
@@ -108,13 +99,6 @@ def occurrence_df(genenames, resource_path, subquery):
         update_dataframe = pd.concat([occuDF.drop(['celltype'], axis=1), dataframe], axis=1)
         update_dataframe.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
     occuDF = pd.concat([occuDF, foundgenes_df], axis=1)
-
-    #print ('Total no. of abstarcts: ' + str(total_abstract))
-    #print ('Total no. of abstarcts annotated in DB:' + str(abs_in_DB))
-    #print ('Total time for pmid fetch: ' +  str(fetch_time) + ' sec')
-    #print ('Total time for occurrence analysis: ' + str(occu_time) + ' sec')
-    #print foundgenes_df.head()
-    #print occuDF.head()
     return occuDF
 
 def joincellsynonym(celloccu, resource_path):
