@@ -227,7 +227,7 @@ class HiearchicalHeatmap():
 
 def radar_factory(num_vars, frame='circle'):
     import numpy as np
-    import seaborn as sns
+    #import seaborn as sns
     #sns.set_style("white")
     import matplotlib.pyplot as plt
     from matplotlib.path import Path
@@ -341,18 +341,19 @@ def plot_radar(gene2plot, tissue, path):
     N = len(data)
     theta = radar_factory(N, frame='polygon')
 
+    plt.rcParams['font.size'] = 10
     fig = plt.figure(figsize=(6, 6))
     fig.subplots_adjust(wspace=0.25, hspace=0.20, top=0.85, bottom=0.05)
 
     ax = fig.add_subplot(1, 1, 1, projection='radar')
     #plt.rgrids([0.1, 0.2, 0.3, 0.4])
-    ax.set_title('Fraction of gene', weight='bold', size='medium', position=(0.5, 1.1),
-                 horizontalalignment='center', verticalalignment='center')
+    #ax.set_title('Fraction of gene', weight='bold', fontsize=15, position=(0.5, 1.1),
+    #             horizontalalignment='center', verticalalignment='center')
     ax.plot(theta, data, color='r', lw=1)
     ax.fill(theta, data, facecolor='r', alpha=0.25)
     ax.set_varlabels(spoke_labels)
     plt.figtext(0.5, 0.965, 'Gene enrichment fraction for (tissue)* types',
-                ha='center', color='black', weight='bold', size='large')
+                ha='center', color='black', weight='bold', fontsize=15)
     plt.savefig(os.path.join(path, 'GCAM_redar.svg'))
     plt.clf()
     plt.close()
@@ -424,7 +425,6 @@ def stack_barplot(sigCelltypedf, args, plotdf, path):
 
 def heatmap_Sigcelltype(args, df, path):
     import seaborn as sns
-    sns.set_context("paper")
     '''
     To plot stack plot df as heatmap
     '''
@@ -477,9 +477,9 @@ def plot_celltypesignificance(path, plotdf, args):
     import numpy as np
     import sys
     print ('plotting celltype significance plot')
-    plotdf = plotdf[(plotdf['genecluster'] >= 10)]
+    plotdf = plotdf[(plotdf['genecluster'] >= 5)]
     if len(plotdf) < 1:
-        sys.exit('Not enough celltypes to plot, please look at the sgcelltype.xls')
+        sys.exit('Not enough genes for significant celltype plot, please see results at the GCAM_sigenes.xls')
     if args.subcommand_name == 'exprbased':
         plotdf = plotdf.sort_values('p-val',ascending=True)
     l = np.log2(plotdf['genecluster'].tolist())
@@ -489,6 +489,7 @@ def plot_celltypesignificance(path, plotdf, args):
     area = [abs((np.log10(x)) * 15) for x in t]
     color = np.random.random(len(t))
     #print area
+    #plt.figure()
     plt.scatter(s, l, s=area, c=color, alpha=0.5)
     plt.grid(True, linestyle=':', color='black')
 

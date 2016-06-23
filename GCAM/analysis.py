@@ -163,11 +163,11 @@ def write_result(significanceDF, outdir, args):
 
     sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 0.05]
     if len(sigCelltypedf) > 1:
-        plots.plot_celltypesignificance(outdir, sigCelltypedf, args)
-        significanceDF.heatmapdf_create()
+        significanceDF.heatmapdf_create(thres=(20,20))
         significanceDF.plot_heatmap(outdir)
         significanceDF.data4radarplot()
         sigCelltypedf.sort_values('genecluster', ascending=True)
+        plots.plot_celltypesignificance(outdir, sigCelltypedf, args)
         sigCelltypedf.to_excel(os.path.join(outdir, 'GCAM_sigCelltypes.xlsx'), index=False)
     else: print('No significant celltypes')
 

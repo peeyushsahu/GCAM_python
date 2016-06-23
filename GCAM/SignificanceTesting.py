@@ -26,7 +26,7 @@ class SignificanceObject():
         self.sigCelltypedf = None
         self.binom_pval_df = None
 
-    def heatmapdf_create(self):
+    def heatmapdf_create(self, thres):
         '''
         This function will generate df for HeatMap by scaling the occurrencedf
         '''
@@ -40,14 +40,14 @@ class SignificanceObject():
         scaled_df.columns = occurrencedf.index
         scaled_df = scaled_df.set_index(occurrencedf.columns)
         self.heatmapdf = scaled_df
-        self.filter_heatmapdf()
+        self.filter_heatmapdf(thres=thres)
 
-    def filter_heatmapdf(self):
+    def filter_heatmapdf(self, thres=(20,20)):
         '''
         This method filters rows and columns with sum < 1 in HeatMapdf
         '''
         df = self.heatmapdf
-        self.filheatmapdf = df.loc[df.sum(1) > 1, df.sum(0) > 1]
+        self.filheatmapdf = df.loc[df.sum(1) > thres[0], df.sum(0) > thres[1]]
 
     def plot_heatmap(self, path):
         '''
